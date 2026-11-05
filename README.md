@@ -27,8 +27,8 @@ Isso troca o site atual (WordPress) pelo novo. Faça só quando estiver pronto.
 
 ## Antes de publicar
 
-- Salve o logo em `assets/logo-staff.png` e troque o endereço da imagem em `index.html` e `funcionarios.html`. Hoje ele é carregado de `staffassessoria.com/wp-content/...` e deixa de aparecer quando o domínio passar para o novo site.
-- Confirme `ONVIO_PORTAL_URL` em `assets/config.js` com o link exato do portal do cliente do escritório.
+- As imagens estão em `assets/img/` e não dependem do site antigo. Os seis links da seção "Artigos" ainda abrem páginas do `staffassessoria.com` e deixam de funcionar quando o domínio passar para o novo site. Antes de trocar o domínio, escolha o que fazer com eles (publicar os artigos no novo site ou remover a seção).
+- O botão "Área do cliente" abre `https://onvio.com.br/staff/#/documents/client` (definido em `ONVIO_PORTAL_URL` em `assets/config.js`). O cliente entra no próprio Onvio com o login e a senha que criou; o site não guarda nem vê essas credenciais.
 - Preencha `CRC` e `WHATSAPP` em `assets/config.js`, se quiser exibi-los.
 
 ## Login da equipe
