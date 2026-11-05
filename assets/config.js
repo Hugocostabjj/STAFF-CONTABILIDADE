@@ -7,9 +7,9 @@ window.STAFF_CONFIG = {
 
   // Contato mostrado no site. Preencha antes de publicar.
   EMAIL: "atendimento@staffassessoria.com",
-  TELEFONE: "(86) 3220-2899",
+  TELEFONE: "(86) 99818-7475",
   WHATSAPP: "", // somente números com DDI e DDD, ex.: 5586999999999
-  ENDERECO: "Rua Angélica 979, Bairro de Fátima, Teresina, Piauí",
+  ENDERECO: "Rua Desembargador João Pereira, 4092, Bairro Santa Isabel, Teresina - PI, CEP 64053-040",
   CRC: "", // ex.: CRC-PI nº 000000/O
 
   // "off": o login da equipe fica desligado (seguro para publicar).
