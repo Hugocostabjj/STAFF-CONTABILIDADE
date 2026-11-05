@@ -1,0 +1,29 @@
+// Edite este arquivo para ajustar links, contatos e funções da área da equipe.
+window.STAFF_CONFIG = {
+  NOME: "Staff Assessoria Contábil",
+
+  // Confirme o endereço exato do portal do cliente do escritório no Onvio.
+  ONVIO_PORTAL_URL: "https://onvio.com.br/",
+
+  // Contato mostrado no site. Preencha antes de publicar.
+  EMAIL: "atendimento@staffassessoria.com",
+  TELEFONE: "(86) 3220-2899",
+  WHATSAPP: "", // somente números com DDI e DDD, ex.: 5586999999999
+  ENDERECO: "Rua Angélica 979, Bairro de Fátima, Teresina, Piauí",
+  CRC: "", // ex.: CRC-PI nº 000000/O
+
+  // "off": o login da equipe fica desligado (seguro para publicar).
+  // "demo": aceita qualquer e-mail/senha e serve só para visualizar a interface em teste local.
+  // Para uso real, troque por um provedor de login com servidor (veja assets/auth.js).
+  AUTH_MODE: "off",
+
+  // Funções da área da equipe. Sem "url" o item aparece como "Em breve".
+  FUNCOES: [
+    { nome: "Portal Onvio da equipe", descricao: "Acesso ao Onvio para atendimento e documentos dos clientes.", url: "https://onvio.com.br/" },
+    { nome: "Consulta de clientes", descricao: "Pesquisar empresa, regime tributário e responsáveis.", url: null },
+    { nome: "Guias e vencimentos", descricao: "Calendário de obrigações e guias do mês.", url: null },
+    { nome: "Emissão de DAS-MEI", descricao: "Emitir e arquivar as guias dos MEIs da competência.", url: null },
+    { nome: "Solicitações de clientes", descricao: "Pedidos abertos pelo portal e pendências de documentos.", url: null },
+    { nome: "Modelos e documentos", descricao: "Declarações, contratos e modelos usados pelo escritório.", url: null }
+  ]
+};
