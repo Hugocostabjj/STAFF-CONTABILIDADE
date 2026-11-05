@@ -2,8 +2,8 @@
 window.STAFF_CONFIG = {
   NOME: "Staff Assessoria Contábil",
 
-  // Confirme o endereço exato do portal do cliente do escritório no Onvio.
-  ONVIO_PORTAL_URL: "https://onvio.com.br/",
+  // Portal do cliente no Onvio, aba Documentos. O cliente entra lá com o login que criou.
+  ONVIO_PORTAL_URL: "https://onvio.com.br/staff/#/documents/client",
 
   // Contato mostrado no site. Preencha antes de publicar.
   EMAIL: "atendimento@staffassessoria.com",
@@ -19,7 +19,7 @@ window.STAFF_CONFIG = {
 
   // Funções da área da equipe. Sem "url" o item aparece como "Em breve".
   FUNCOES: [
-    { nome: "Portal Onvio da equipe", descricao: "Acesso ao Onvio para atendimento e documentos dos clientes.", url: "https://onvio.com.br/" },
+    { nome: "Portal Onvio da equipe", descricao: "Acesso ao Onvio para atendimento e documentos dos clientes.", url: "https://onvio.com.br/staff/" },
     { nome: "Consulta de clientes", descricao: "Pesquisar empresa, regime tributário e responsáveis.", url: null },
     { nome: "Guias e vencimentos", descricao: "Calendário de obrigações e guias do mês.", url: null },
     { nome: "Emissão de DAS-MEI", descricao: "Emitir e arquivar as guias dos MEIs da competência.", url: null },

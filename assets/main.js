@@ -8,10 +8,7 @@
   });
   document.querySelectorAll("[data-cfg-text]").forEach(function (el) {
     var v = cfg[el.getAttribute("data-cfg-text")];
-    if (v) {
-      el.textContent = v;
-      el.hidden = false;
-    }
+    if (v) el.textContent = v;
   });
   document.querySelectorAll("[data-cfg-tel]").forEach(function (el) {
     var v = cfg[el.getAttribute("data-cfg-tel")];
@@ -30,57 +27,45 @@
   var ano = document.getElementById("ano");
   if (ano) ano.textContent = new Date().getFullYear();
 
-  // Balancete que se soma uma vez ao carregar e termina carimbado.
-  var balancete = document.getElementById("balancete");
-  if (balancete) {
-    var fmt = function (n) {
-      return n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    };
-    var celulas = balancete.querySelectorAll("[data-valor]");
-    var totD = document.getElementById("total-d");
-    var totC = document.getElementById("total-c");
-    var dif = document.getElementById("diferenca");
-
-    var somaD = 0, somaC = 0;
-    celulas.forEach(function (c) {
-      var v = parseFloat(c.getAttribute("data-valor"));
-      if (c.getAttribute("data-col") === "d") somaD += v; else somaC += v;
+  // Menu no celular
+  var hamb = document.getElementById("hamb");
+  var menu = document.getElementById("menu");
+  if (hamb && menu) {
+    hamb.addEventListener("click", function () {
+      var aberto = menu.classList.toggle("aberto");
+      hamb.setAttribute("aria-expanded", aberto ? "true" : "false");
     });
-
-    var mostrarFinal = function () {
-      celulas.forEach(function (c) {
-        c.textContent = fmt(parseFloat(c.getAttribute("data-valor")));
-      });
-      totD.textContent = fmt(somaD);
-      totC.textContent = fmt(somaC);
-      dif.textContent = fmt(somaD - somaC);
-      balancete.classList.add("conferido");
-    };
-
-    if (reduzMovimento) {
-      mostrarFinal();
-    } else {
-      var duracao = 1400;
-      var inicio = null;
-      var passo = function (t) {
-        if (inicio === null) inicio = t;
-        var p = Math.min((t - inicio) / duracao, 1);
-        var e = 1 - Math.pow(1 - p, 3);
-        celulas.forEach(function (c) {
-          c.textContent = fmt(parseFloat(c.getAttribute("data-valor")) * e);
-        });
-        totD.textContent = fmt(somaD * e);
-        totC.textContent = fmt(somaC * e);
-        dif.textContent = fmt((somaD - somaC) * e);
-        if (p < 1) {
-          requestAnimationFrame(passo);
-        } else {
-          mostrarFinal();
-        }
-      };
-      requestAnimationFrame(passo);
-    }
+    menu.addEventListener("click", function (ev) {
+      if (ev.target.tagName === "A") {
+        menu.classList.remove("aberto");
+        hamb.setAttribute("aria-expanded", "false");
+      }
+    });
   }
+
+  // Carrossel principal
+  var slides = document.querySelectorAll(".hero .slide");
+  if (slides.length > 1 && !reduzMovimento) {
+    var atual = 0;
+    setInterval(function () {
+      slides[atual].classList.remove("ativo");
+      atual = (atual + 1) % slides.length;
+      slides[atual].classList.add("ativo");
+    }, 6000);
+  }
+
+  // Carrosséis de rolagem (artigos, depoimentos)
+  document.querySelectorAll(".carrossel").forEach(function (c) {
+    var faixa = c.querySelector(".faixa");
+    var esq = c.querySelector(".seta.esq");
+    var dir = c.querySelector(".seta.dir");
+    if (!faixa) return;
+    var passo = function (sinal) {
+      faixa.scrollBy({ left: sinal * faixa.clientWidth * 0.85, behavior: reduzMovimento ? "auto" : "smooth" });
+    };
+    if (esq) esq.addEventListener("click", function () { passo(-1); });
+    if (dir) dir.addEventListener("click", function () { passo(1); });
+  });
 
   // Formulário de contato: abre WhatsApp ou e-mail com a mensagem pronta.
   var form = document.getElementById("form-contato");
@@ -89,6 +74,11 @@
     form.addEventListener("submit", function (ev) {
       ev.preventDefault();
       var d = new FormData(form);
+      if (!String(d.get("nome") || "").trim() || !String(d.get("mensagem") || "").trim()) {
+        aviso.textContent = "Preencha seu nome e a mensagem.";
+        aviso.hidden = false;
+        return;
+      }
       var texto =
         "Olá, sou " + d.get("nome") + ". " + d.get("mensagem") +
         "\nTelefone: " + d.get("telefone") + "\nE-mail: " + d.get("email");
@@ -98,13 +88,13 @@
         window.location.href =
           "mailto:" + cfg.EMAIL + "?subject=" + encodeURIComponent("Contato pelo site") + "&body=" + encodeURIComponent(texto);
       } else {
-        aviso.textContent = "Os canais de contato ainda não foram configurados. Preencha EMAIL ou WHATSAPP em assets/config.js.";
+        aviso.textContent = "Os canais de contato ainda não foram configurados.";
         aviso.hidden = false;
       }
     });
   }
 
-  // Área da equipe.
+  // Área da equipe
   var painel = document.getElementById("painel");
   var login = document.getElementById("login");
   if (painel && login && window.StaffAuth) {
