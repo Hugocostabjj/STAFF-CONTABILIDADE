@@ -1,0 +1,57 @@
+/* Área da equipe: telas de acesso, usuário no topo, aba Equipe e modo "só ver".
+   Usa as mesmas cores do painel.css. */
+
+.sem-login .topo, .sem-login .abas, .sem-login .conteudo { display: none; }
+body:not(.sem-login) .acesso { display: none; }
+
+.acesso {
+  min-height: 100vh; display: grid; place-items: center; padding: 1.5rem 1rem;
+  background: linear-gradient(160deg, var(--marinho) 0%, var(--marinho) 42%, var(--fundo) 42%);
+}
+.acesso-caixa {
+  width: 100%; max-width: 420px; background: var(--superficie); border: 1px solid var(--linha);
+  border-radius: var(--raio); box-shadow: var(--sombra); padding: 1.6rem 1.4rem;
+}
+.acesso-marca { display: flex; align-items: center; gap: .7rem; margin-bottom: 1.2rem; }
+.acesso-marca .marca-icone { background: var(--marinho); }
+.acesso-marca strong { display: block; font-size: 1.05rem; }
+.acesso-marca span { font-size: .85rem; color: var(--texto-2); }
+.acesso h2 { font-size: 1.25rem; margin-bottom: .3rem; }
+.acesso p { margin: .2rem 0 .9rem; color: var(--texto-2); font-size: .92rem; }
+.acesso form { display: grid; gap: .8rem; }
+.acesso .campo input { width: 100%; }
+.acesso .btn { width: 100%; }
+.acesso-links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .3rem; margin-top: .6rem; }
+.acesso-links .btn-link { min-height: 44px; padding-inline: .2rem; font-size: .92rem; }
+.acesso-ok {
+  margin: 0; padding: .7rem .8rem; border-radius: 8px;
+  background: var(--ok-bg); color: var(--ok); font-weight: 600; font-size: .92rem;
+}
+.acesso .aviso-erro { margin: 0; }
+.acesso-voltar { display: inline-block; margin-top: 1rem; color: var(--azul); font-size: .9rem; }
+.carregando { text-align: center; color: var(--texto-2); }
+
+/* usuário no topo */
+.topo-direita { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.usuario { display: flex; align-items: center; gap: .5rem; color: #c9d6e3; font-size: .85rem; }
+.usuario span { max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.usuario .btn { min-height: 40px; padding: .4rem .8rem; }
+
+/* aba Equipe */
+.equipe-intro { margin: 0 0 1rem; color: var(--texto-2); max-width: 70ch; }
+.form-equipe {
+  display: grid; grid-template-columns: 2fr 1.4fr 1.2fr auto; gap: .7rem; align-items: end;
+  background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--raio);
+  padding: 1rem; margin-bottom: 1rem; box-shadow: var(--sombra);
+}
+.form-equipe .campo input, .form-equipe .campo select { width: 100%; }
+@media (max-width: 760px) { .form-equipe { grid-template-columns: 1fr; } }
+
+/* "só ver": o banco já bloqueia; aqui só some com os botões */
+.modo-leitura #btn-novo, .modo-leitura #btn-novo-2, .modo-leitura .btn-acao,
+.modo-leitura #robo-ligar-todas, .modo-leitura #robo-rodar, .modo-leitura #agenda-botao { display: none !important; }
+.modo-leitura .botao-captura, .modo-leitura .cod-input, .modo-leitura #robo-escritorio { pointer-events: none; opacity: .7; }
+.modo-editor #agenda-botao { display: none !important; }
+.modo-editor #robo-escritorio { pointer-events: none; opacity: .7; }
+.so-leitura-aviso { display: none; }
+.modo-leitura .so-leitura-aviso { display: block; }
