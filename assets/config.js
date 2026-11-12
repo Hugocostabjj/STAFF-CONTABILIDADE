@@ -8,17 +8,9 @@ window.STAFF_CONFIG = {
   // Contato mostrado no site. Preencha antes de publicar.
   EMAIL: "atendimento@staffassessoria.com",
   TELEFONE: "(86) 99818-7475",
-  // WhatsApp: com o número preenchido aparecem o botão verde no canto e o "Fale com a gente" abre a conversa.
-  WHATSAPP: "5586998187475", // somente números com DDI e DDD
+  WHATSAPP: "5586998187475", // somente números com DDI e DDD, ex.: 5586999999999
   ENDERECO: "Rua Desembargador João Pereira, 4092, Bairro Santa Isabel, Teresina - PI, CEP 64053-040",
-  CRC: "CRC-PI 006155/O-4", // aparece no rodapé
-
-  // Redes sociais: só aparecem as que tiverem endereço completo (começando com https://).
-  REDES: {
-    INSTAGRAM: "https://www.instagram.com/staff_assessoria_contabil/",
-    FACEBOOK: "",
-    LINKEDIN: ""
-  },
+  CRC: "", // ex.: CRC-PI nº 000000/O
 
   // "off": o login da equipe fica desligado (seguro para publicar).
   // "demo": aceita qualquer e-mail/senha e serve só para visualizar a interface em teste local.

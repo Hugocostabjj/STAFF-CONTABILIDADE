@@ -24,32 +24,6 @@
       el.setAttribute("href", "mailto:" + v);
     }
   });
-  // WhatsApp: com número no config.js, os botões abrem a conversa; sem número, levam ao formulário.
-  var whats = String(cfg.WHATSAPP || "").replace(/\D/g, "");
-  if (whats) {
-    document.querySelectorAll("[data-cfg-whats]").forEach(function (el) {
-      el.setAttribute("href", "https://wa.me/" + whats + "?text=" + encodeURIComponent("Olá! Vim pelo site da Staff e gostaria de atendimento."));
-      el.setAttribute("target", "_blank");
-      el.setAttribute("rel", "noopener");
-      el.hidden = false;
-    });
-  }
-  // Redes sociais: só aparecem as que tiverem endereço (https) no config.js.
-  var redes = cfg.REDES || {};
-  document.querySelectorAll("[data-cfg-rede]").forEach(function (el) {
-    var v = redes[el.getAttribute("data-cfg-rede")];
-    if (v && /^https:\/\//i.test(v)) {
-      el.setAttribute("href", v);
-      if (el.parentElement) el.parentElement.hidden = false;
-    }
-  });
-  // Registro no CRC no rodapé.
-  if (cfg.CRC) {
-    document.querySelectorAll("[data-cfg-crc]").forEach(function (el) {
-      el.textContent = cfg.CRC;
-      el.hidden = false;
-    });
-  }
   var ano = document.getElementById("ano");
   if (ano) ano.textContent = new Date().getFullYear();
 
@@ -61,21 +35,11 @@
       var aberto = menu.classList.toggle("aberto");
       hamb.setAttribute("aria-expanded", aberto ? "true" : "false");
     });
-    var fecharMenu = function () {
-      menu.classList.remove("aberto");
-      hamb.setAttribute("aria-expanded", "false");
-    };
     menu.addEventListener("click", function (ev) {
-      if (ev.target.tagName === "A") fecharMenu();
-    });
-    document.addEventListener("keydown", function (ev) {
-      if (ev.key === "Escape" && menu.classList.contains("aberto")) {
-        fecharMenu();
-        hamb.focus();
+      if (ev.target.tagName === "A") {
+        menu.classList.remove("aberto");
+        hamb.setAttribute("aria-expanded", "false");
       }
-    });
-    document.addEventListener("click", function (ev) {
-      if (menu.classList.contains("aberto") && !menu.contains(ev.target) && !hamb.contains(ev.target)) fecharMenu();
     });
   }
 
@@ -103,6 +67,21 @@
     if (dir) dir.addEventListener("click", function () { passo(1); });
   });
 
+  // Certificado digital: cada cartão abre o WhatsApp com a mensagem pronta.
+  var numeroWa = String(cfg.WHATSAPP || cfg.TELEFONE || "").replace(/\D/g, "");
+  if (numeroWa && numeroWa.length <= 11) numeroWa = "55" + numeroWa;
+  document.querySelectorAll("[data-cert]").forEach(function (a) {
+    var card = a.closest(".cert-card");
+    var preco = card && card.querySelector("[data-cert-preco]");
+    var tipo = card && card.querySelector(".cert-tipo");
+    var msg =
+      "Olá, tenho interesse em agendar o horário para fazer a emissão do certificado digital." +
+      "\nTipo: " + a.getAttribute("data-cert") +
+      (tipo ? " (" + tipo.textContent + ")" : "") +
+      (preco ? "\nValor: R$ " + preco.textContent : "");
+    if (numeroWa) a.href = "https://wa.me/" + numeroWa + "?text=" + encodeURIComponent(msg);
+  });
+
   // Formulário de contato: abre WhatsApp ou e-mail com a mensagem pronta.
   var form = document.getElementById("form-contato");
   if (form) {
@@ -118,8 +97,8 @@
       var texto =
         "Olá, sou " + d.get("nome") + ". " + d.get("mensagem") +
         "\nTelefone: " + d.get("telefone") + "\nE-mail: " + d.get("email");
-      if (whats) {
-        window.open("https://wa.me/" + whats + "?text=" + encodeURIComponent(texto), "_blank", "noopener");
+      if (cfg.WHATSAPP) {
+        window.open("https://wa.me/" + cfg.WHATSAPP + "?text=" + encodeURIComponent(texto), "_blank", "noopener");
       } else if (cfg.EMAIL) {
         window.location.href =
           "mailto:" + cfg.EMAIL + "?subject=" + encodeURIComponent("Contato pelo site") + "&body=" + encodeURIComponent(texto);
