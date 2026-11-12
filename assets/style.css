@@ -53,7 +53,6 @@ h1, h2, h3 { margin: 0; line-height: 1.2; }
 .menu a:hover { color: var(--azul); }
 .menu .botao-menu { background: var(--laranja); color: #fff; border-radius: 6px; padding: 0.45rem 1rem; margin-left: 0.6rem; }
 .menu .botao-menu:hover { background: #d95c12; color: #fff; }
-.menu .link-equipe { border: 2px solid var(--azul); border-radius: 6px; padding: 0.35rem 0.9rem; color: var(--azul); margin-left: 0.3rem; }
 .hamb { display: none; margin-left: auto; background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 0.45rem 0.6rem; cursor: pointer; }
 .hamb span { display: block; width: 22px; height: 2px; background: #555; margin: 4px 0; }
 
@@ -253,7 +252,7 @@ a.funcao:hover { box-shadow: 0 0 18px rgba(243, 111, 33, 0.4); }
   .hamb { display: block; }
   .menu { display: none; position: absolute; left: 0; right: 0; top: 100%; background: #fff; flex-direction: column; align-items: stretch; padding: 0.5rem 1rem 1rem; box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15); }
   .menu.aberto { display: flex; }
-  .menu .botao-menu, .menu .link-equipe { margin: 0.4rem 0 0; text-align: center; }
+  .menu .botao-menu { margin: 0.4rem 0 0; text-align: center; }
 }
 
 @media (max-width: 640px) {
