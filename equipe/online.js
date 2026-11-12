@@ -132,6 +132,9 @@
       document.body.classList.toggle("modo-leitura", PAPEL === "leitor");
       document.body.classList.toggle("modo-editor", PAPEL === "editor");
       $("tab-equipe").hidden = PAPEL !== "admin";
+      rest("GET", "equipe?select=nome&email=eq." + encodeURIComponent(SESSAO.email)).then(function (l) {
+        if (l && l[0] && l[0].nome) window.PAINEL_USUARIO = l[0].nome;
+      }).catch(function () {});
       mostrarTela("app");
       liberar();
     }).catch(function (e) {
@@ -365,9 +368,11 @@
       return Promise.all([
         rest("GET", "certificados?excluido=eq.false&select=*&order=cliente"),
         geral(),
-        rest("GET", "certificados_envio?select=rotulo,status,resposta,enviado_em,enviado_por&order=id.desc&limit=20").catch(function () { return []; })
+        rest("GET", "certificados_envio?select=rotulo,status,resposta,enviado_em,enviado_por&order=id.desc&limit=20").catch(function () { return []; }),
+        rest("GET", "empresas?select=codigo,cnpj,nome,fiscal,contabil,pessoal,legal,ativo&order=codigo").catch(function () { return []; })
       ]).then(function (r) {
-        return { certificados: (r[0] || []).map(paraPainel), clientes: r[1].dados.clientes || [], hoje: hoje(), envios: r[2] || [] };
+        return { certificados: (r[0] || []).map(paraPainel), clientes: r[1].dados.clientes || [], hoje: hoje(), envios: r[2] || [],
+          empresas: r[3] || [] };
       });
     },
     "/api/salvar": function (b) {
@@ -398,6 +403,16 @@
       }).then(function (env) {
         return rest("POST", "certificados_envio", { rotulo: texto(item.cliente || "certificado sem nome", 150), dados: env }, "return=minimal");
       }).then(function () { return { ok: true, instalado: false }; });
+    },
+    "/api/empresa/salvar": function (b) {
+      var e = (b && b.empresa) || {};
+      var item = {
+        codigo: digitos(e.codigo).slice(0, 10), cnpj: digitos(e.cnpj).slice(0, 14), nome: texto(e.nome, 150),
+        fiscal: texto(e.fiscal, 60), contabil: texto(e.contabil, 60), pessoal: texto(e.pessoal, 60), legal: texto(e.legal, 60), ativo: true
+      };
+      if (!item.codigo || !item.nome) return Promise.reject(new Error("informe o código e o nome"));
+      if (item.cnpj && item.cnpj.length !== 11 && item.cnpj.length !== 14) return Promise.reject(new Error("CNPJ deve ter 14 números (ou CPF, 11)"));
+      return rest("POST", "empresas?on_conflict=codigo", item, "resolution=merge-duplicates,return=minimal").then(function () { return { ok: true }; });
     },
     "/api/ler-pfx": soComputador,
     "/api/importar-windows": soComputador,

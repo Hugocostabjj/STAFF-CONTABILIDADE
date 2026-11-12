@@ -354,3 +354,68 @@ dialog::backdrop { background: rgba(8, 25, 42, .55); }
 @media (prefers-reduced-motion: no-preference) {
   .card, .btn { transition: background-color .15s, border-color .15s, color .15s; }
 }
+
+/* ===================================================================
+   Painel e carteira (12/11/2026): visual mais limpo.
+   Cor só onde há informação: laranja = pendência, verde = ok, cinza = neutro.
+   =================================================================== */
+.painel-lista, .robo-bloco, .robo-intro, .robo-escritorio { box-shadow: none; }
+
+.pn-topo { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem; margin: .5rem 0 1.25rem; }
+.pn-titulo { font-size: 1.6rem; font-weight: 700; letter-spacing: -.01em; }
+.pn-frase { margin: .25rem 0 0; color: var(--texto-2); max-width: 60ch; }
+.pn-filtros .campo select { min-width: 12rem; }
+
+.pn-indicadores { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-bottom: 2rem;
+  border-top: 1px solid var(--linha); border-bottom: 1px solid var(--linha); }
+.ind { display: flex; flex-direction: column; align-items: flex-start; gap: .2rem; padding: 1.1rem 1.2rem 1.2rem;
+  background: none; border: 0; border-left: 1px solid var(--linha); color: var(--texto); font-family: var(--fonte);
+  text-align: left; cursor: pointer; position: relative; }
+.ind:first-child { border-left: 0; padding-left: 0; }
+.ind::before { content: ""; position: absolute; left: 1.2rem; right: 1.2rem; top: -1px; height: 3px; background: var(--cor-ind); }
+.ind:first-child::before { left: 0; }
+.ind:hover .ind-t { color: var(--texto); text-decoration: underline; }
+.ind-n { font-size: 2.4rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: var(--cor-ind); }
+.ind-t { font-size: .92rem; color: var(--texto-2); max-width: 22ch; }
+.ind-proc { --cor-ind: var(--urgente); }
+.ind-nfse { --cor-ind: var(--azul); }
+.ind-cert { --cor-ind: var(--vencido); }
+.ind-semcert { --cor-ind: var(--neutro); }
+
+.pn-pessoas h3, .carteira h2 { font-size: 1.15rem; margin: 0 0 .7rem; }
+.tabela td.num, .tabela th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.tabela-pessoas td.num { color: var(--texto-2); }
+.tabela-pessoas td.num.tem { color: var(--texto); font-weight: 700; }
+
+.carteira { margin: 1.5rem 0; }
+.ct-topo { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: .8rem; margin-bottom: .6rem; }
+.ct-filtros { display: flex; flex-wrap: wrap; align-items: end; gap: .6rem; }
+.ct-filtros .campo-busca { min-width: 15rem; }
+.tabela-carteira tr.com-pendencia td:first-child { box-shadow: inset 3px 0 0 var(--urgente); }
+.resps { display: flex; flex-direction: column; }
+.resp-k { color: var(--texto-2); opacity: .8; }
+.resp-atual { color: var(--texto); font-weight: 600; }
+
+.chip { display: inline-block; padding: .18rem .6rem; border-radius: 999px; font-size: .82rem; font-weight: 600; white-space: nowrap;
+  background: var(--neutro-bg); color: var(--neutro); }
+.chip-ok { background: var(--ok-bg); color: var(--ok); }
+.chip-pendente { background: var(--urgente-bg); color: var(--urgente); }
+.chip-erro { background: var(--vencido-bg); color: var(--vencido); }
+.chip-atencao { background: var(--atencao-bg); color: var(--atencao); }
+.selo.nao_cad { --cor: var(--neutro); --cor-bg: var(--neutro-bg); }
+
+.captura-cert { margin: 1.5rem 0; border-top: 1px solid var(--linha); padding-top: .8rem; }
+.captura-cert > summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+
+@media (max-width: 900px) {
+  .pn-indicadores { grid-template-columns: repeat(2, 1fr); }
+  .ind:nth-child(3) { border-left: 0; padding-left: 0; }
+  .ind:nth-child(3)::before { left: 0; }
+  .ind:nth-child(n+3) { border-top: 1px solid var(--linha); }
+}
+@media (max-width: 520px) {
+  .pn-indicadores { grid-template-columns: 1fr; }
+  .ind { border-left: 0; padding-left: 0; border-top: 1px solid var(--linha); }
+  .ind::before { left: 0; }
+  .ct-filtros .campo-busca { min-width: 0; width: 100%; }
+}

@@ -100,6 +100,7 @@
       erroGeral("");
       preencherListas();
       render();
+      renderCarteiraTudo();
     }).catch(function (e) { erroGeral("Erro: " + e.message + "."); });
   }
 
@@ -536,7 +537,7 @@
   $("dlg-cert").addEventListener("close", function () { $("pfx-senha").value = ""; $("pfx-arquivo").value = ""; });
 
   // ------------------------------------------------------------ abas
-  var ABA = "venc";
+  var ABA = "painel";
   function abasVisiveis() {
     return Array.prototype.filter.call(document.querySelectorAll(".abas-in [role=tab]"), function (t) { return !t.hidden; })
       .map(function (t) { return t.id.slice(4); });
@@ -580,6 +581,7 @@
       ROBO = j;
       erroGeral("");
       renderRobo();
+      renderCarteiraTudo();
       clearTimeout(roboTimer);
       if (j.rodando && ABA === "robo") roboTimer = setTimeout(carregarRobo, window.PAINEL_INTERVALO_ROBO || 4000);
     }).catch(function (e) { erroGeral("Erro: " + e.message + "."); });
@@ -938,6 +940,232 @@
     }).catch(function (e) { erroGeral("Erro: " + e.message + "."); });
   });
 
+  // ------------------------------------------------------------ carteira (Painel + Notas por empresa)
+  var SETORES = { fiscal: "Fiscal", contabil: "Contábil", pessoal: "Pessoal", legal: "Legalização" };
+  function mesCompetencia() {
+    var m = ROBO.competencia_atual || "";
+    return m ? m.slice(5) + "/" + m.slice(0, 4) : "do mês";
+  }
+  function digitos(s) { return String(s || "").replace(/\D/g, ""); }
+  function primeiroNome(s) { return semAcento(String(s || "").trim().split(/\s+/)[0]); }
+
+  // junta empresa + situação da NFS-e (robô) + certificado (lista de certificados)
+  function linhasCarteira() {
+    var porDoc = {}, porCod = {};
+    DADOS.certificados.forEach(function (c) {
+      var d = digitos(c.documento), atual;
+      if (d) { atual = porDoc[d]; if (!atual || (c.vence_em || "") > (atual.vence_em || "")) porDoc[d] = c; }
+      if (c.codigo) { atual = porCod[c.codigo]; if (!atual || (c.vence_em || "") > (atual.vence_em || "")) porCod[c.codigo] = c; }
+    });
+    var st = ROBO.nfse_status || {};
+    return (DADOS.empresas || []).filter(function (e) { return e.ativo !== false; }).map(function (e) {
+      var doc = digitos(e.cnpj), pj = doc.length === 14;
+      var cert = porDoc[doc] || porCod[e.codigo] || null;
+      var sit = cert ? situacao(cert) : "nao_cad";
+      var n = pj ? st[doc] || null : null;
+      var proc = !pj ? "nao_aplica" : n ? n.procuracao : "nao_testado";
+      var nf = !pj ? "nao_aplica" : n ? n.nfse : "pendente";
+      return {
+        e: e, doc: doc, cert: cert, certSit: sit, nfse: n, proc: proc, nf: nf,
+        pProc: proc === "pendente",
+        pNfse: nf === "pendente" && proc !== "pendente",
+        pCert: ["vencido", "urgente", "atencao"].indexOf(sit) >= 0,
+        pSem: sit === "nao_cad" || sit === "sem_cert"
+      };
+    });
+  }
+
+  function respDe(l, setor) { return (l.e[setor] || "").trim(); }
+
+  function renderCarteiraTudo() {
+    if (!DADOS.empresas) return;
+    renderPainel();
+    renderCarteira();
+  }
+
+  function renderPainel() {
+    var setor = $("pn-setor").value || "fiscal", L = linhasCarteira();
+    var nP = 0, nN = 0, nC = 0, nS = 0, pessoas = {};
+    L.forEach(function (l) {
+      if (l.pProc) nP++; if (l.pNfse) nN++; if (l.pCert) nC++; if (l.pSem) nS++;
+      var r = respDe(l, setor) || "Sem responsável";
+      var p = pessoas[r] = pessoas[r] || { nome: r, n: 0, proc: 0, nfse: 0, cert: 0 };
+      p.n++; if (l.pProc) p.proc++; if (l.pNfse) p.nfse++; if (l.pCert) p.cert++;
+    });
+    $("pn-n-proc").textContent = nP;
+    $("pn-n-nfse").textContent = nN;
+    $("pn-n-cert").textContent = nC;
+    $("pn-n-semcert").textContent = nS;
+    $("pn-t-nfse").textContent = "com NFS-e de " + mesCompetencia() + " pendente";
+    $("pn-th-nfse").textContent = "NFS-e " + mesCompetencia() + " pendente";
+    $("pn-frase").textContent = L.length + " empresas no escritório. Clique num número ou num responsável para ver a lista.";
+    var tb = $("pn-pessoas");
+    tb.textContent = "";
+    Object.keys(pessoas).sort(function (a, b) { return pessoas[b].n - pessoas[a].n; }).forEach(function (k) {
+      var p = pessoas[k];
+      var cel = function (v, rot) { return el("td", { "data-rotulo": rot, classe: "num" + (v ? " tem" : "") }, [String(v)]); };
+      var b = el("button", { type: "button", classe: "btn btn-acao", "data-pessoa": p.nome === "Sem responsável" ? "" : p.nome, texto: "Ver empresas" });
+      b.setAttribute("aria-label", "Ver as empresas de " + p.nome);
+      tb.appendChild(el("tr", null, [
+        el("td", { "data-rotulo": "Responsável" }, [el("span", { classe: "cli-nome", texto: p.nome })]),
+        cel(p.n, "Empresas"), cel(p.proc, "Sem procuração"), cel(p.nfse, "NFS-e pendente"), cel(p.cert, "Certificado a resolver"),
+        el("td", null, [b])
+      ]));
+    });
+  }
+
+  function irParaCarteira(filtro, pessoa) {
+    $("ct-setor").value = $("pn-setor").value || "fiscal";
+    preencherResponsaveis();
+    if (pessoa !== undefined) $("ct-resp").value = pessoa;
+    if (filtro !== undefined) $("ct-filtro").value = filtro;
+    mostrarAba("robo");
+    renderCarteira();
+    $("ct-tit").scrollIntoView({ block: "start" });
+  }
+  document.querySelectorAll("[data-ir-filtro]").forEach(function (b) {
+    b.addEventListener("click", function () { irParaCarteira(b.getAttribute("data-ir-filtro"), ""); });
+  });
+  $("pn-pessoas").addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-pessoa]");
+    if (b) irParaCarteira("", b.getAttribute("data-pessoa"));
+  });
+  $("pn-setor").addEventListener("change", renderPainel);
+
+  var RESP_INICIAL = false;
+  function preencherResponsaveis() {
+    var setor = $("ct-setor").value || "fiscal", sel = $("ct-resp"), atual = sel.value, nomes = {};
+    (DADOS.empresas || []).forEach(function (e) { if ((e[setor] || "").trim()) nomes[e[setor].trim()] = 1; });
+    sel.textContent = "";
+    sel.appendChild(el("option", { value: "", texto: "Todos" }));
+    Object.keys(nomes).sort(function (a, b) { return a.localeCompare(b, "pt-BR"); }).forEach(function (n) { sel.appendChild(el("option", { value: n, texto: n })); });
+    if (!RESP_INICIAL && window.PAINEL_USUARIO) {   // abre já nas empresas de quem entrou
+      var eu = primeiroNome(window.PAINEL_USUARIO);
+      Object.keys(nomes).forEach(function (n) { if (primeiroNome(n) === eu) atual = n; });
+      RESP_INICIAL = true;
+    }
+    sel.value = nomes[atual] ? atual : "";
+    var dl = $("lista-equipe");
+    dl.textContent = "";
+    var todos = {};
+    (DADOS.empresas || []).forEach(function (e) { ["fiscal", "contabil", "pessoal", "legal"].forEach(function (k) { if (e[k]) todos[e[k]] = 1; }); });
+    Object.keys(todos).sort().forEach(function (n) { dl.appendChild(el("option", { value: n })); });
+  }
+
+  var PROC_TXT = { ok: ["ok", "Com procuração"], pendente: ["pendente", "Pendente"], erro: ["erro", "Erro na consulta"],
+    nao_testado: ["neutro", "Ainda não testada"], nao_aplica: ["neutro", "Pessoa física"] };
+  var NFSE_TXT = { disponivel: ["ok", "No Drive"], sem_notas: ["neutro", "Sem notas no mês"], so_local: ["atencao", "Sem pasta no Drive"],
+    pendente: ["pendente", "Pendente"], nao_aplica: ["neutro", "—"] };
+
+  function chip(par, titulo) {
+    var c = el("span", { classe: "chip chip-" + par[0], texto: par[1] });
+    if (titulo) c.title = titulo;
+    return c;
+  }
+
+  function renderCarteira() {
+    if (!DADOS.empresas) return;
+    if (!$("ct-resp").options.length || $("ct-resp").getAttribute("data-setor") !== $("ct-setor").value) {
+      preencherResponsaveis();
+      $("ct-resp").setAttribute("data-setor", $("ct-setor").value);
+    }
+    var setor = $("ct-setor").value || "fiscal", resp = $("ct-resp").value, f = $("ct-filtro").value;
+    var busca = semAcento($("ct-busca").value).trim(), dig = busca.replace(/\D/g, "");
+    $("ct-th-nfse").textContent = "NFS-e " + mesCompetencia();
+    var L = linhasCarteira(), total = L.length;
+    L = L.filter(function (l) {
+      if (resp && respDe(l, setor) !== resp) return false;
+      if (f === "pendencias" && !(l.pProc || l.pNfse || l.pCert)) return false;
+      if (f === "procuracao" && !l.pProc) return false;
+      if (f === "nfse" && !l.pNfse) return false;
+      if (f === "certificado" && !l.pCert) return false;
+      if (f === "semcert" && !l.pSem) return false;
+      if (busca) {
+        var ok = semAcento(l.e.nome + " " + l.e.codigo).indexOf(busca) >= 0;
+        if (!ok && dig.length >= 3) ok = l.doc.indexOf(dig) >= 0 || l.e.codigo === dig;
+        if (!ok) return false;
+      }
+      return true;
+    }).sort(function (a, b) {
+      var pa = (a.pProc || a.pNfse || a.pCert) ? 0 : 1, pb = (b.pProc || b.pNfse || b.pCert) ? 0 : 1;
+      if (pa !== pb) return pa - pb;
+      return Number(a.e.codigo) - Number(b.e.codigo);
+    });
+    var tb = $("ct-linhas");
+    tb.textContent = "";
+    var online = !!window.PAINEL_API;
+    L.forEach(function (l) {
+      var e = l.e, n = l.nfse;
+      var outros = ["fiscal", "contabil", "pessoal", "legal"].filter(function (k) { return k !== setor; })
+        .map(function (k) { return SETORES[k] + ": " + (e[k] || "—"); }).join(" · ");
+      var resps = el("span", { classe: "resps", title: outros }, [
+        el("span", { classe: "resp-atual", texto: e[setor] || "Sem responsável" }),
+        el("span", { classe: "mini", texto: SETORES[setor] })
+      ]);
+      var nfTit = n ? (n.prestadas + " prestada(s) e " + n.tomadas + " tomada(s)" + (n.canceladas ? ", " + n.canceladas + " cancelada(s)" : "")) : "";
+      var nfCel = [chip(NFSE_TXT[l.nf] || NFSE_TXT.pendente, nfTit)];
+      if (n && l.nf === "disponivel") nfCel.push(el("span", { classe: "mini", texto: nfTit }));
+      var procCel = [chip(PROC_TXT[l.proc] || PROC_TXT.nao_testado, n ? n.mensagem : "")];
+      if (l.proc === "pendente") procCel.push(el("span", { classe: "mini", texto: "Pedir no e-CAC: procuração para o CNPJ da Staff com o serviço NFS-e" }));
+      if (l.proc === "erro" && n) procCel.push(el("span", { classe: "mini", texto: n.mensagem }));
+      var certCel = l.cert
+        ? [el("span", { classe: "selo " + l.certSit, texto: textoSituacao(l.cert) })]
+        : [el("span", { classe: "selo nao_cad", texto: "Não cadastrado" })];
+      var acoes = [];
+      if (online) {
+        var b = el("button", { type: "button", classe: "btn btn-acao", "data-empresa": e.codigo, texto: "Editar" });
+        b.setAttribute("aria-label", "Editar responsáveis de " + e.nome);
+        acoes.push(b);
+      }
+      tb.appendChild(el("tr", { classe: (l.pProc || l.pNfse || l.pCert) ? "com-pendencia" : "" }, [
+        el("td", { "data-rotulo": "Empresa" }, [el("span", { classe: "cli-nome", texto: e.nome }),
+          el("span", { classe: "mini", texto: "Código " + e.codigo + (l.doc ? " · " + (l.doc.length === 14 ? cnpjFmt(l.doc) : "CPF ***." + l.doc.slice(3, 6) + "." + l.doc.slice(6, 9) + "-**") : "") })]),
+        el("td", { "data-rotulo": "Responsável" }, [resps]),
+        el("td", { "data-rotulo": "Procuração" }, procCel),
+        el("td", { "data-rotulo": "NFS-e " + mesCompetencia() }, nfCel),
+        el("td", { "data-rotulo": "Certificado" }, certCel),
+        el("td", null, acoes)
+      ]));
+    });
+    $("ct-tabela").hidden = !L.length;
+    $("ct-contagem").textContent = L.length === total ? total + " empresas" : "Mostrando " + L.length + " de " + total + " empresas";
+  }
+  ["ct-resp", "ct-filtro"].forEach(function (id) { $(id).addEventListener("change", renderCarteira); });
+  $("ct-setor").addEventListener("change", function () { $("ct-resp").value = ""; renderCarteira(); });
+  $("ct-busca").addEventListener("input", renderCarteira);
+
+  // editar empresa (responsáveis) — só na versão online, onde a lista fica guardada
+  var EMP_EDIT = null;
+  $("ct-linhas").addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-empresa]");
+    if (!b) return;
+    EMP_EDIT = (DADOS.empresas || []).filter(function (e) { return e.codigo === b.getAttribute("data-empresa"); })[0];
+    if (!EMP_EDIT) return;
+    ["codigo", "nome", "cnpj", "fiscal", "contabil", "pessoal", "legal"].forEach(function (k) { $("em-" + k).value = EMP_EDIT[k] || ""; });
+    $("em-codigo").readOnly = true;
+    $("dlg-empresa-tit").textContent = "Responsáveis da empresa";
+    $("erro-empresa").hidden = true;
+    $("dlg-empresa").showModal();
+    $("em-fiscal").focus();
+  });
+  $("form-empresa").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var item = {};
+    ["codigo", "nome", "cnpj", "fiscal", "contabil", "pessoal", "legal"].forEach(function (k) { item[k] = $("em-" + k).value.trim(); });
+    item.cnpj = digitos(item.cnpj);
+    var erro = !/^\d{1,10}$/.test(item.codigo) ? "Informe o código Domínio (só números)." : !item.nome ? "Informe o nome da empresa." :
+      (item.cnpj && item.cnpj.length !== 11 && item.cnpj.length !== 14) ? "CNPJ deve ter 14 números (ou CPF, 11)." : "";
+    if (erro) { $("erro-empresa").textContent = erro; $("erro-empresa").hidden = false; return; }
+    $("btn-salvar-empresa").setAttribute("aria-disabled", "true");
+    api("/api/empresa/salvar", { empresa: item }).then(function () {
+      $("dlg-empresa").close();
+      toast("Empresa " + item.codigo + " salva.");
+      return carregar();
+    }).catch(function (e) { $("erro-empresa").textContent = e.message.charAt(0).toUpperCase() + e.message.slice(1) + "."; $("erro-empresa").hidden = false; })
+      .then(function () { $("btn-salvar-empresa").removeAttribute("aria-disabled"); });
+  });
+
   window.PAINEL = { carregar: carregar, carregarRobo: carregarRobo, toast: toast, erroGeral: erroGeral };
-  carregar();
+  $("btn-novo").hidden = true;   // abre no Painel; o botão de cadastro aparece na aba Certificados
+  carregar().then(function () { return carregarRobo(); });
 })();

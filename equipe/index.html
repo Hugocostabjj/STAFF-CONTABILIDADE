@@ -10,8 +10,8 @@
 <meta name="supabase-key" content="sb_publishable_sQOzzt2lNsfQQA7LEy87hA_OQkEqpOj">
 <meta name="color-scheme" content="light dark">
 <title>Área da equipe · Staff</title>
-<link rel="stylesheet" href="painel.css?v=b0236f75ae">
-<link rel="stylesheet" href="online.css?v=b0236f75ae">
+<link rel="stylesheet" href="painel.css?v=c5072d3d90">
+<link rel="stylesheet" href="online.css?v=c5072d3d90">
 <link rel="icon" href="../assets/img/favicon_staff-2-58x58.png">
 </head>
 <body class="sem-login">
@@ -100,7 +100,8 @@
 
 <nav class="abas" aria-label="Seções">
   <div class="abas-in" role="tablist">
-    <button type="button" role="tab" class="aba" id="tab-venc" aria-selected="true" aria-controls="aba-venc">Certificados</button>
+    <button type="button" role="tab" class="aba" id="tab-painel" aria-selected="true" aria-controls="aba-painel">Painel</button>
+    <button type="button" role="tab" class="aba" id="tab-venc" aria-selected="false" aria-controls="aba-venc" tabindex="-1">Certificados</button>
     <button type="button" role="tab" class="aba" id="tab-robo" aria-selected="false" aria-controls="aba-robo" tabindex="-1">Robô de notas</button>
     <button type="button" role="tab" class="aba" id="tab-equipe" aria-selected="false" aria-controls="aba-equipe" tabindex="-1" hidden>Equipe</button>
   </div>
@@ -110,7 +111,46 @@
   <p class="aviso-erro" id="erro-geral" role="alert" hidden></p>
   <p class="aviso-amarelo so-leitura-aviso">Seu acesso é <strong>só para ver</strong>. Para mudar algo, fale com o administrador.</p>
 
-<div id="aba-venc" role="tabpanel" aria-labelledby="tab-venc">
+<div id="aba-painel" role="tabpanel" aria-labelledby="tab-painel">
+  <section class="pn-topo">
+    <div>
+      <h2 class="pn-titulo">Carteira</h2>
+      <p class="pn-frase" id="pn-frase">Carregando…</p>
+    </div>
+    <div class="pn-filtros">
+      <label class="campo"><span>Setor</span>
+        <select id="pn-setor">
+          <option value="fiscal">Fiscal</option><option value="contabil">Contábil</option>
+          <option value="pessoal">Pessoal</option><option value="legal">Legalização</option>
+        </select>
+      </label>
+    </div>
+  </section>
+
+  <section class="pn-indicadores" aria-label="O que precisa de atenção">
+    <button type="button" class="ind ind-proc" data-ir-filtro="procuracao"><span class="ind-n" id="pn-n-proc">–</span><span class="ind-t">sem procuração para a Staff</span></button>
+    <button type="button" class="ind ind-nfse" data-ir-filtro="nfse"><span class="ind-n" id="pn-n-nfse">–</span><span class="ind-t" id="pn-t-nfse">com NFS-e do mês pendente</span></button>
+    <button type="button" class="ind ind-cert" data-ir-filtro="certificado"><span class="ind-n" id="pn-n-cert">–</span><span class="ind-t">certificado vencido ou vencendo em 30 dias</span></button>
+    <button type="button" class="ind ind-semcert" data-ir-filtro="semcert"><span class="ind-n" id="pn-n-semcert">–</span><span class="ind-t">sem certificado cadastrado</span></button>
+  </section>
+
+  <section class="pn-pessoas">
+    <h3>Por responsável</h3>
+    <div class="tabela-wrap">
+      <table class="tabela tabela-pessoas">
+        <thead><tr>
+          <th scope="col">Responsável</th><th scope="col" class="num">Empresas</th>
+          <th scope="col" class="num">Sem procuração</th><th scope="col" class="num" id="pn-th-nfse">NFS-e pendente</th>
+          <th scope="col" class="num">Certificado a resolver</th><th scope="col"><span class="sr-only">Abrir</span></th>
+        </tr></thead>
+        <tbody id="pn-pessoas"></tbody>
+      </table>
+    </div>
+    <p class="mini">Os responsáveis vêm do Onvio Processos (Configure &gt; Responsabilidades). Para mudar o responsável de uma empresa, use <strong>Editar</strong> na aba Robô de notas.</p>
+  </section>
+</div>
+
+<div id="aba-venc" role="tabpanel" aria-labelledby="tab-venc" hidden>
   <div class="barra-acoes-topo" hidden>
     <button type="button" class="btn btn-sec" id="btn-importar">Trazer certificados instalados no Windows</button>
   </div>
@@ -212,9 +252,9 @@
 <div id="aba-robo" role="tabpanel" aria-labelledby="tab-robo" hidden>
   <section class="robo-intro">
     <div>
-      <h2>Captura semanal de notas fiscais</h2>
-      <p>Toda <strong>segunda-feira</strong> e todo <strong>dia 1º</strong> (para fechar o mês passado), às 9h, o robô busca, para cada empresa com a captura ligada: <strong>NF-e de entrada</strong> (dá a ciência da operação e já baixa o XML completo), <strong>NF-e de saída</strong>, <strong>CT-e</strong> e <strong>NFS-e</strong> do Portal Nacional. Cada nota vai para a pasta do mês em que foi emitida: <code>1CLIENTES\CLIENTE CÓDIGO\FISCAL\XML\ANO\MÊS\</code> no Google Drive.</p>
-      <p class="dica">Usa os certificados A1 já instalados neste Windows (sem senha). Se o horário passar com o computador desligado, ele roda assim que o computador for ligado. Às 11h, 13h, 15h e 17h ele repete para terminar o que faltou. A coluna "Fechamento do mês" mostra o que já está na pasta do mês passado e deste mês.</p>
+      <h2>Robô de notas</h2>
+      <p class="dica">Captura semanal (NF-e e CT-e das empresas com certificado ligado): toda <strong>segunda-feira</strong> e todo <strong>dia 1º</strong> (para fechar o mês passado), às 9h, o robô busca, para cada empresa com a captura ligada: <strong>NF-e de entrada</strong> (dá a ciência da operação e já baixa o XML completo), <strong>NF-e de saída</strong>, <strong>CT-e</strong> e <strong>NFS-e</strong> do Portal Nacional. Cada nota vai para a pasta do mês em que foi emitida: <code>1CLIENTES\CLIENTE CÓDIGO\FISCAL\XML\ANO\MÊS\</code> no Google Drive.</p>
+
     </div>
     <div class="robo-rodada">
       <div class="interruptor-geral">
@@ -246,6 +286,47 @@
     </div>
   </section>
 
+  <section class="carteira" aria-labelledby="ct-tit">
+    <div class="ct-topo">
+      <h2 id="ct-tit">Notas por empresa</h2>
+      <div class="ct-filtros">
+        <label class="campo"><span>Responsável</span><select id="ct-resp"><option value="">Todos</option></select></label>
+        <label class="campo"><span>Setor</span>
+          <select id="ct-setor"><option value="fiscal">Fiscal</option><option value="contabil">Contábil</option><option value="pessoal">Pessoal</option><option value="legal">Legalização</option></select>
+        </label>
+        <label class="campo"><span>Mostrar</span>
+          <select id="ct-filtro">
+            <option value="">Todas as empresas</option>
+            <option value="pendencias">Só com pendência</option>
+            <option value="procuracao">Sem procuração</option>
+            <option value="nfse">NFS-e pendente</option>
+            <option value="certificado">Certificado a resolver</option>
+            <option value="semcert">Sem certificado cadastrado</option>
+          </select>
+        </label>
+        <label class="campo-busca">
+          <span class="sr-only">Buscar empresa</span>
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4"/></svg>
+          <input type="search" id="ct-busca" placeholder="Empresa, código ou CNPJ" autocomplete="off">
+        </label>
+      </div>
+    </div>
+    <p class="contagem" id="ct-contagem" aria-live="polite"></p>
+    <div class="tabela-wrap">
+      <table class="tabela tabela-carteira" id="ct-tabela">
+        <thead><tr>
+          <th scope="col">Empresa</th><th scope="col">Responsável</th>
+          <th scope="col">Procuração</th><th scope="col" id="ct-th-nfse">NFS-e do mês</th>
+          <th scope="col">Certificado</th><th scope="col"><span class="sr-only">Ações</span></th>
+        </tr></thead>
+        <tbody id="ct-linhas"></tbody>
+      </table>
+    </div>
+    <p class="mini">Procuração: o robô testa todo mês, no Portal Nacional, se o cliente deu procuração à Staff para a NFS-e. "Pendente" = pedir ao cliente no e-CAC. NFS-e: "No Drive" quando o pacote da competência (ZIP + relatório) já está na pasta do cliente.</p>
+  </section>
+
+  <details class="captura-cert">
+  <summary>Captura de NF-e e CT-e pelos certificados instalados</summary>
   <section class="robo-escritorio">
     <label class="campo">
       <span>Certificado do escritório (para as NF-e de <strong>saída</strong>)</span>
@@ -325,6 +406,8 @@
     <p class="mini" id="rel-vazio" hidden>Ainda não há notas capturadas.</p>
     <p class="dica">NF-e emitidas só chegam quando o cliente coloca o CNPJ da Staff no autXML. NFC-e: a SEFAZ não entrega pelo robô; contam só as que estiverem na pasta <code>NFC-e</code> do mês (por exemplo, exportadas do sistema de vendas do cliente). Cada empresa também tem a planilha <code>relatorio-notas.csv</code> na pasta <code>FISCAL\XML</code> do Drive.</p>
   </section>
+
+  </details>
 
   <details class="ciencia-info">
     <summary>O que acontece quando eu ligo a captura de uma empresa?</summary>
@@ -461,6 +544,34 @@
   </form>
 </dialog>
 
+<!-- Empresa: responsáveis por setor -->
+<dialog id="dlg-empresa" aria-labelledby="dlg-empresa-tit">
+  <form method="dialog" class="dlg" id="form-empresa" novalidate>
+    <div class="dlg-topo">
+      <h2 id="dlg-empresa-tit">Empresa</h2>
+      <button type="button" class="btn-icone" data-fechar aria-label="Fechar">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="grade">
+      <label class="campo"><span>Código Domínio <em>*</em></span><input type="text" id="em-codigo" inputmode="numeric" maxlength="10" required></label>
+      <label class="campo col-3"><span>Nome <em>*</em></span><input type="text" id="em-nome" maxlength="150" required></label>
+      <label class="campo col-2"><span>CNPJ ou CPF</span><input type="text" id="em-cnpj" inputmode="numeric" maxlength="18"></label>
+      <label class="campo"><span>Fiscal</span><input type="text" id="em-fiscal" maxlength="60" list="lista-equipe"></label>
+      <label class="campo"><span>Contábil</span><input type="text" id="em-contabil" maxlength="60" list="lista-equipe"></label>
+      <label class="campo"><span>Pessoal</span><input type="text" id="em-pessoal" maxlength="60" list="lista-equipe"></label>
+      <label class="campo"><span>Legalização</span><input type="text" id="em-legal" maxlength="60" list="lista-equipe"></label>
+      <datalist id="lista-equipe"></datalist>
+    </div>
+    <p class="dica">Use os mesmos nomes do Onvio Processos. Mudanças aqui não alteram o Onvio.</p>
+    <p class="aviso-erro" id="erro-empresa" role="alert" hidden></p>
+    <div class="dlg-botoes">
+      <button type="button" class="btn btn-sec" data-fechar>Cancelar</button>
+      <button type="submit" class="btn btn-laranja" id="btn-salvar-empresa">Salvar empresa</button>
+    </div>
+  </form>
+</dialog>
+
 <!-- Aviso ao cliente -->
 <dialog id="dlg-aviso" aria-labelledby="dlg-aviso-tit">
   <div class="dlg">
@@ -487,7 +598,7 @@
 </dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="online.js?v=b0236f75ae"></script>
-<script src="painel.js?v=b0236f75ae"></script>
+<script src="online.js?v=c5072d3d90"></script>
+<script src="painel.js?v=c5072d3d90"></script>
 </body>
 </html>
