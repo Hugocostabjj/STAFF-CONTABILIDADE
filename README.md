@@ -5,8 +5,8 @@ Site estático em HTML, CSS e JavaScript puros. Não precisa de instalação nem
 ## Arquivos
 
 - `index.html`: página pública de apresentação (certificado digital, serviços, artigos, contato).
-- `funcionarios.html`: apenas redireciona para `equipe/`.
-- `equipe/`: área da equipe (painel de certificados e robô de notas). Entra com e-mail e senha pelo Supabase Auth; as permissões valem no banco (RLS).
+- `funcionarios.html`: apenas redireciona para `equipe/`. Não há link para ele no site público.
+- `equipe/`: área da equipe (painel de certificados e robô de notas), acessada só pelo endereço direto. Entra com e-mail e senha pelo Supabase Auth; as permissões valem no banco (RLS). O site público mostra apenas a "Área do cliente" (portal do cliente no Onvio).
 - `assets/config.js`: contatos e links públicos. É o arquivo que você mais vai editar.
 - `assets/main.js`, `assets/chatbot.js` e `assets/style.css`: comportamento, assistente de atendimento e visual.
 - `assets/auth.js`: não é mais usado. Pode ser apagado do repositório.
