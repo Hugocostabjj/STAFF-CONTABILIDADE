@@ -55,8 +55,8 @@ h1, h2, h3 { margin: 0; line-height: 1.2; }
 .menu .botao-menu:hover { background: #d95c12; color: #fff; }
 .entrar { position: relative; }
 .menu button.botao-menu { border: 0; font: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; min-height: 40px; }
-.entrar .seta { transition: transform 0.15s; }
-.entrar button[aria-expanded="true"] .seta { transform: rotate(180deg); }
+.entrar .ico-seta { flex: none; transition: transform 0.15s; }
+.entrar button[aria-expanded="true"] .ico-seta { transform: rotate(180deg); }
 .entrar-opcoes { position: absolute; right: 0; top: calc(100% + 8px); z-index: 50; min-width: 260px; background: #fff; border-radius: 10px; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18); padding: 0.4rem; }
 .menu .entrar-opcoes a { display: block; padding: 0.65rem 0.8rem; border-radius: 8px; color: #222; }
 .menu .entrar-opcoes a:hover, .menu .entrar-opcoes a:focus-visible { background: #fdeee4; color: #222; }
