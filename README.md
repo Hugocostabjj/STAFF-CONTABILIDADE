@@ -4,11 +4,12 @@ Site estático em HTML, CSS e JavaScript puros. Não precisa de instalação nem
 
 ## Arquivos
 
-- `index.html`: página pública de apresentação.
-- `funcionarios.html`: área da equipe (login e funções internas).
-- `assets/config.js`: contatos, link do portal Onvio e lista de funções da equipe. É o arquivo que você mais vai editar.
-- `assets/auth.js`: login da equipe. Hoje desligado (`AUTH_MODE: "off"`).
-- `assets/main.js` e `assets/style.css`: comportamento e visual.
+- `index.html`: página pública de apresentação (certificado digital, serviços, artigos, contato).
+- `funcionarios.html`: apenas redireciona para `equipe/`.
+- `equipe/`: área da equipe (painel de certificados e robô de notas). Entra com e-mail e senha pelo Supabase Auth; as permissões valem no banco (RLS).
+- `assets/config.js`: contatos e links públicos. É o arquivo que você mais vai editar.
+- `assets/main.js`, `assets/chatbot.js` e `assets/style.css`: comportamento, assistente de atendimento e visual.
+- `assets/auth.js`: não é mais usado. Pode ser apagado do repositório.
 
 ## Publicar no GitHub Pages
 
@@ -24,15 +25,20 @@ Isso troca o site atual (WordPress) pelo novo. Faça só quando estiver pronto.
 1. Em Settings, Pages, preencha "Custom domain" com o domínio e salve. O GitHub cria o arquivo `CNAME` no repositório.
 2. No provedor do domínio, aponte o DNS para o GitHub Pages seguindo a documentação oficial do GitHub (registros A para o domínio raiz e CNAME para `www`).
 3. Depois que o endereço funcionar, ative "Enforce HTTPS".
+4. No Supabase, em Authentication, URL Configuration, troque o Site URL e as Redirect URLs pelo novo endereço de `equipe/`.
 
 ## Antes de publicar
 
-- As imagens estão em `assets/img/` e não dependem do site antigo. Os seis links da seção "Artigos" ainda abrem páginas do `staffassessoria.com` e deixam de funcionar quando o domínio passar para o novo site. Antes de trocar o domínio, escolha o que fazer com eles (publicar os artigos no novo site ou remover a seção).
-- O botão "Área do cliente" abre `https://onvio.com.br/staff/#/documents/client` (definido em `ONVIO_PORTAL_URL` em `assets/config.js`). O cliente entra no próprio Onvio com o login e a senha que criou; o site não guarda nem vê essas credenciais.
-- Preencha `CRC` e `WHATSAPP` em `assets/config.js`, se quiser exibi-los.
+- Os links da seção "Artigos" abrem fontes oficiais (Receita Federal e Planalto) e continuam valendo depois da troca de domínio.
+- O botão "Área do cliente" abre `https://onvio.com.br/staff/#/documents/client` (definido em `ONVIO_PORTAL_URL` em `assets/config.js`). O cliente entra no próprio Onvio; o site não guarda nem vê essas credenciais.
+- Preencha `CRC` em `assets/config.js`, se quiser exibi-lo.
 
-## Login da equipe
+## Segurança (leia antes de enviar arquivos)
 
-O repositório e o site do GitHub Pages são públicos. Senha conferida só no navegador não protege nada, por isso o login está desligado. Para ativar um login de verdade é preciso um serviço com servidor (por exemplo, Supabase Auth) ligado em `assets/auth.js`. Para ver a interface em teste local, troque `AUTH_MODE` para `"demo"` e não publique assim.
+O repositório e o site são **públicos**: qualquer pessoa lê todo o código e todo o histórico.
 
-Não coloque no repositório senhas, chaves de API, nem dados de clientes.
+- **Nunca envie** para o repositório: certificados (`.pfx`, `.p12`), senhas, chaves secretas (a `service_role` do Supabase, por exemplo), planilhas ou qualquer dado de clientes. Apagar depois não resolve, porque o arquivo continua no histórico.
+- O envio pelo site do GitHub ("Add file, Upload files") **ignora o `.gitignore`**. Confira os nomes dos arquivos antes de arrastar.
+- No navegador só pode ficar a chave pública do Supabase (`sb_publishable_...`). Ela é feita para ser pública, mas só é segura se o RLS estiver ativado em todas as tabelas.
+- Todas as páginas têm uma política de segurança de conteúdo (CSP) no `<head>`. Se adicionar scripts ou fontes de outro site, é preciso liberar o endereço nessa política.
+- Ative a verificação em duas etapas na conta do GitHub e na do Supabase.
