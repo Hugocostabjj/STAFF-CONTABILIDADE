@@ -46,6 +46,30 @@
     });
   }
 
+  // Botão "Entrar": Área do cliente e Área da equipe
+  var entrar = document.getElementById("entrar-botao");
+  var opcoes = document.getElementById("entrar-opcoes");
+  if (entrar && opcoes) {
+    var fecharEntrar = function (foco) {
+      opcoes.hidden = true;
+      entrar.setAttribute("aria-expanded", "false");
+      if (foco) entrar.focus();
+    };
+    entrar.addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      var abrir = opcoes.hidden;
+      opcoes.hidden = !abrir;
+      entrar.setAttribute("aria-expanded", abrir ? "true" : "false");
+      if (abrir) opcoes.querySelector("a").focus();
+    });
+    document.addEventListener("click", function (ev) {
+      if (!opcoes.hidden && !opcoes.contains(ev.target)) fecharEntrar(false);
+    });
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape" && !opcoes.hidden) fecharEntrar(true);
+    });
+  }
+
   // Carrossel principal
   var slides = document.querySelectorAll(".hero .slide");
   if (slides.length > 1 && !reduzMovimento) {
