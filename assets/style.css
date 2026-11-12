@@ -139,6 +139,9 @@ h1, h2, h3 { margin: 0; line-height: 1.2; }
 .post .meta { display: flex; justify-content: center; gap: 1.2rem; font-size: 0.9rem; color: #555; padding: 0.7rem 0; border-bottom: 1px solid #ddd; margin-bottom: 1rem; }
 .post h3 { font-family: var(--pop); font-weight: 600; font-size: 1.3rem; line-height: 1.3; color: var(--azul); }
 .post:hover h3 { color: var(--laranja); }
+.post p { margin: 0.7rem 0 0.5rem; font-size: 0.9rem; line-height: 1.5; color: #555; text-align: left; }
+.post .fonte { display: block; font-size: 0.8rem; font-weight: 500; color: var(--azul); text-align: left; }
+.intro-artigos { max-width: 640px; margin: -0.6rem 0 1.6rem; color: #555; font-size: 0.95rem; }
 
 /* Contatos */
 .contatos { padding: 1.5rem 0 3.5rem; }
@@ -186,6 +189,28 @@ form.campos { display: grid; gap: 0.8rem; }
 .rodape .redes svg { width: 16px; height: 16px; fill: #fff; }
 .rodape .redes a:hover { background: var(--laranja); border-color: var(--laranja); }
 .copia { background: #2d3e50; color: #e7e7e7; font-size: 0.78rem; padding: 0.9rem 0; }
+
+/* Assistente virtual */
+.bot { position: fixed; right: 1rem; bottom: 1rem; z-index: 40; font-family: var(--rob); }
+.bot-fab { display: flex; align-items: center; gap: 0.55rem; background: var(--laranja); color: #fff; border: 0; border-radius: 999px; padding: 0.7rem 1.1rem 0.7rem 0.8rem; font: 600 0.95rem var(--pop); cursor: pointer; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3); }
+.bot-fab:hover { background: #d95c12; }
+.bot-fab svg { width: 30px; height: 30px; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.bot-painel { position: absolute; right: 0; bottom: calc(100% + 0.7rem); width: min(360px, calc(100vw - 2rem)); background: #fff; border-radius: 18px; box-shadow: 0 10px 34px rgba(0, 0, 0, 0.3); overflow: hidden; display: flex; flex-direction: column; max-height: min(520px, calc(100vh - 7rem)); }
+.bot-topo { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; background: var(--azul); color: #fff; padding: 0.85rem 1rem; }
+.bot-topo strong { display: block; font-family: var(--mont); font-size: 1.05rem; }
+.bot-topo span { font-size: 0.8rem; opacity: 0.85; }
+.bot-fechar { background: transparent; border: 0; color: #fff; font-size: 1.8rem; line-height: 1; cursor: pointer; padding: 0 0.3rem; }
+.bot-msgs { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; background: #f4f7fb; }
+.bot-b { margin: 0; max-width: 85%; padding: 0.6rem 0.85rem; border-radius: 14px; font-size: 0.92rem; line-height: 1.45; }
+.bot-b.robo { background: #fff; border: 1px solid #dde4ee; border-bottom-left-radius: 4px; align-self: flex-start; }
+.bot-b.eu { background: var(--azul); color: #fff; border-bottom-right-radius: 4px; align-self: flex-end; }
+.bot-opcoes { display: flex; flex-direction: column; gap: 0.45rem; padding: 0.8rem 1rem 1rem; border-top: 1px solid #e3e8ef; max-height: 45%; overflow-y: auto; }
+.bot-op { display: block; width: 100%; text-align: center; text-decoration: none; background: #fff; color: var(--azul); border: 1.5px solid var(--azul); border-radius: 8px; padding: 0.55rem 0.8rem; font: 600 0.9rem var(--rob); cursor: pointer; }
+.bot-op:hover { background: var(--azul); color: #fff; }
+.bot-op.sec { border-color: #b9c2ce; color: var(--cinza); }
+.bot-op.sec:hover { background: #eef1f5; color: var(--texto); }
+.bot-op.bot-wa { background: #1fa855; border-color: #1fa855; color: #fff; }
+.bot-op.bot-wa:hover { background: #178a45; border-color: #178a45; }
 
 /* Área da equipe */
 .equipe { padding: 3.5rem 0 5rem; min-height: 60vh; background: linear-gradient(var(--claro), #fff 60%); }
@@ -237,6 +262,8 @@ a.funcao:hover { box-shadow: 0 0 18px rgba(243, 111, 33, 0.4); }
   .seta.dir { right: -6px; }
   .slide::before { background: rgba(10, 30, 60, 0.55); }
   .barra .redes { display: none; }
+  .bot { right: 0.7rem; bottom: 0.7rem; }
+  .bot-fab { padding: 0.65rem 0.95rem 0.65rem 0.7rem; font-size: 0.9rem; }
   .selo { left: -1rem; }
   .foto-arco { margin-left: 1rem; }
   .barra ul { gap: 0.8rem; font-size: 0.85rem; }
