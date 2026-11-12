@@ -371,8 +371,9 @@
   function atualizarLinksAviso() {
     var c = AVISANDO, txt = $("aviso-texto").value;
     var w = $("aviso-whats");
-    w.href = "https://wa.me/" + (c.whatsapp || "") + "?text=" + encodeURIComponent(txt);
-    w.textContent = c.whatsapp ? "Abrir no WhatsApp" : "WhatsApp (escolher contato)";
+    var numero = String(c.whatsapp || "").replace(/\D/g, "").slice(0, 15);   // só dígitos: nada estranho entra no link
+    w.href = "https://wa.me/" + numero + "?text=" + encodeURIComponent(txt);
+    w.textContent = numero ? "Abrir no WhatsApp" : "WhatsApp (escolher contato)";
     var m = $("aviso-email");
     if (c.email) {
       m.href = "mailto:" + encodeURIComponent(c.email).replace(/%40/g, "@") +
