@@ -230,6 +230,22 @@
 
   <div class="avisos-robo" id="avisos-robo"></div>
 
+  <section class="robo-blocos" aria-label="Robôs de notas">
+    <div class="robo-bloco">
+      <div class="bloco-topo"><h2>NFS-e por competência</h2><span class="selo ok">Ativo</span></div>
+      <p>Todo <strong>dia 2</strong>, às 9h, o robô baixa do Portal Nacional as NFS-e <strong>prestadas e tomadas</strong> do mês anterior (pela procuração da Staff ou pelo certificado do cliente) e monta na pasta do cliente, em <code>FISCAL\XML\ANO\MÊS\NFS-e COMPETENCIA MM-AAAA\</code>, o <strong>ZIP com os XML</strong> (pronto para o Sittax) e o <strong>relatório em planilha</strong>.</p>
+      <div class="comp-linha">
+        <label class="campo"><span>Competência</span><select id="comp-mes"></select></label>
+        <button type="button" class="btn btn-azul" id="comp-rodar">Capturar competência</button>
+      </div>
+      <p class="mini" id="comp-status" aria-live="polite"></p>
+    </div>
+    <div class="robo-bloco">
+      <div class="bloco-topo"><h2>NF-e, NFC-e e CT-e</h2><span class="selo atencao">Em andamento</span></div>
+      <p>O novo robô de NF-e (entrada e saída), NFC-e e CT-e por competência está em construção. Enquanto isso, a captura atual continua rodando toda segunda e todo dia 1º, como mostram as colunas abaixo.</p>
+    </div>
+  </section>
+
   <section class="robo-escritorio">
     <label class="campo">
       <span>Certificado do escritório (para as NF-e de <strong>saída</strong>)</span>

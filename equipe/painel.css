@@ -132,6 +132,15 @@ code { font-size: .9em; }
 .selo.nao_cad { --cor: var(--neutro); --cor-bg: var(--neutro-bg); }
 .selo.nao_cad::before { border-radius: 2px; background: transparent; border: 2px solid currentColor; }
 .relatorio { margin-top: 1.25rem; }
+.robo-blocos { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1rem; margin: 1rem 0 1.25rem; }
+.robo-bloco { background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--raio); padding: 1rem 1.1rem; box-shadow: var(--sombra); }
+.robo-bloco p { margin: .5rem 0; }
+.bloco-topo { display: flex; align-items: center; justify-content: space-between; gap: .6rem; flex-wrap: wrap; }
+.bloco-topo h2 { font-size: 1.1rem; }
+.comp-linha { display: flex; flex-wrap: wrap; align-items: end; gap: .6rem; }
+.sel-nfse { margin-top: .4rem; display: flex; flex-direction: column; gap: .2rem; font-size: .82rem; color: var(--texto-2); }
+.sel-nfse select { min-height: 40px; }
+@media (max-width: 900px) { .robo-blocos { grid-template-columns: 1fr; } }
 .rel-topo { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: .8rem; margin-bottom: .6rem; }
 .rel-topo h2 { font-size: 1.15rem; }
 .rel-acoes { display: flex; flex-wrap: wrap; align-items: end; gap: .6rem; }

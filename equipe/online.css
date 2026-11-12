@@ -49,7 +49,8 @@ body:not(.sem-login) .acesso { display: none; }
 
 /* "só ver": o banco já bloqueia; aqui só some com os botões */
 .modo-leitura #btn-novo, .modo-leitura #btn-novo-2, .modo-leitura .btn-acao,
-.modo-leitura #robo-ligar-todas, .modo-leitura #robo-rodar, .modo-leitura #agenda-botao { display: none !important; }
+.modo-leitura #robo-ligar-todas, .modo-leitura #robo-rodar, .modo-leitura #agenda-botao, .modo-leitura #comp-rodar { display: none !important; }
+.modo-leitura .sel-nfse select { pointer-events: none; opacity: .7; }
 .modo-leitura .botao-captura, .modo-leitura .cod-input, .modo-leitura #robo-escritorio { pointer-events: none; opacity: .7; }
 .modo-editor #agenda-botao { display: none !important; }
 .modo-editor #robo-escritorio { pointer-events: none; opacity: .7; }

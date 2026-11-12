@@ -646,11 +646,10 @@
     av.textContent = "";
     if (ROBO.empresas.length && !ROBO.drive_ok) av.appendChild(el("p", { classe: "aviso-amarelo" }, [el("strong", { texto: "Google Drive fechado: " }), "não encontrei " + ROBO.drive + ". Abra o Google Drive para computador. Enquanto isso, os XML ficam em " + ROBO.pasta_xml + " e vão para o Drive na próxima captura."]));
     (ROBO.avisos_online || []).forEach(function (t) { av.appendChild(el("p", { classe: "aviso-amarelo", texto: t })); });
-    var semPfx = ROBO.empresas.filter(function (e) { return e.config && e.config.ativo && !e.pfx && "pfx" in e; });
+    var semPfx = ROBO.empresas.filter(function (e) { return e.config && e.config.ativo && e.config.nfse_acesso === "certificado" && !e.pfx && "pfx" in e; });
     if (semPfx.length) av.appendChild(el("p", { classe: "aviso-amarelo" }, [
       el("strong", { texto: "NFS-e: " }),
-      "para buscar a NFS-e, cadastre o arquivo .pfx com a senha (aba Certificados > Editar ou Cadastrar) de " +
-      (semPfx.length === 1 ? "1 empresa" : semPfx.length + " empresas") + " com a captura ligada: " +
+      "estas empresas estão marcadas para buscar a NFS-e pelo próprio certificado, mas o .pfx com a senha ainda não foi cadastrado (aba Certificados > Editar): " +
       semPfx.map(function (e) { return e.config.cliente + (e.config.codigo ? " (" + e.config.codigo + ")" : ""); }).join(", ") + "."
     ]));
 
@@ -679,7 +678,35 @@
       ? lista.length + " de " + ROBO.empresas.length + " empresas · " + ativas + " com a captura ligada"
       : "";
     renderRelatorio();
+    renderCompetencia();
   }
+
+  // ------------------------------------------------------------ NFS-e por competência
+  function moeda(v) { return Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function renderCompetencia() {
+    var sel = $("comp-mes");
+    if (!sel.options.length) {
+      var d = DADOS.hoje ? new Date(Date.parse(DADOS.hoje + "T12:00:00Z")) : new Date();
+      d.setUTCDate(1);
+      for (var i = 1; i <= 12; i++) {
+        d.setUTCMonth(d.getUTCMonth() - 1);
+        var m = d.toISOString().slice(0, 7);
+        sel.appendChild(el("option", { value: m, texto: m.slice(5) + "/" + m.slice(0, 4) }));
+      }
+    }
+    var r = ROBO.competencia_rodada || {}, st = $("comp-status");
+    if (ROBO.pedido_competencia) st.textContent = "Captura de competência pedida: o computador do escritório começa em alguns minutos.";
+    else if (r.rodando) st.textContent = "Montando a competência " + String(r.comp || "").slice(5) + "/" + String(r.comp || "").slice(0, 4) + "… (começou " + dataHoraBr(r.inicio) + ")";
+    else st.textContent = r.fim ? "Última competência montada: " + String(r.comp).slice(5) + "/" + String(r.comp).slice(0, 4) + " em " + dataHoraBr(r.fim) + "." : "Nenhuma competência montada ainda.";
+  }
+  $("comp-rodar").addEventListener("click", function () {
+    var m = $("comp-mes").value;
+    if (!m || !confirm("Capturar as NFS-e da competência " + m.slice(5) + "/" + m.slice(0, 4) + " de todas as empresas com a captura ligada?\n\nO pacote (ZIP + relatório) vai para a pasta de cada cliente no Drive.")) return;
+    api("/api/robo/competencia", { competencia: m }).then(function () {
+      toast("Captura da competência iniciada. Leva alguns minutos.");
+      setTimeout(carregarRobo, 1500);
+    }).catch(function (e) { erroGeral("Erro: " + e.message + "."); });
+  });
 
   // ------------------------------------------------------------ relatório do mês
   var REL_COLS = [["saida", "NF-e emitidas"], ["entrada", "NF-e recebidas"], ["nfce", "NFC-e"], ["cte", "CT-e"],
@@ -762,6 +789,13 @@
     var botao = el("button", { type: "button", classe: "botao-captura", "data-robo": "ativo", "data-cnpj": e.cnpj, "aria-pressed": cfg.ativo ? "true" : "false", "aria-label": "Captura de " + cfg.cliente });
     botao.appendChild(el("span", { classe: "trilho", "aria-hidden": "true" }));
     botao.appendChild(document.createTextNode(cfg.ativo ? "Ligada" : "Desligada"));
+    var sel = el("select", { "data-robo": "nfse_acesso", "data-cnpj": e.cnpj, "aria-label": "Acesso da NFS-e de " + cfg.cliente });
+    [["procuracao", "Procuração da Staff"], ["certificado", "Certificado da empresa"]].forEach(function (o) {
+      var op = el("option", { value: o[0], texto: o[1] });
+      if ((cfg.nfse_acesso || "procuracao") === o[0]) op.selected = true;
+      sel.appendChild(op);
+    });
+    var selNfse = el("label", { classe: "sel-nfse" }, [el("span", { texto: "NFS-e por" }), sel]);
 
     var linhas = [];
     [["nfe", "NF-e"], ["cte", "CT-e"], ["nfse", "NFS-e"]].forEach(function (p) {
@@ -796,6 +830,17 @@
       fech.push(el("span", { classe: "mini" }, [el("strong", { texto: p[1] + " (" + f.mes.slice(5) + "/" + f.mes.slice(0, 4) + "): " }), partes.join(" · ")]));
       if (f.so_resumo) fech.push(el("span", { classe: "mini msg-erro", texto: f.so_resumo + " só em resumo" + (f.so_resumo_fora ? " (" + f.so_resumo_fora + " fora do prazo da ciência: pedir o XML ao fornecedor)" : " (o XML completo ainda vai chegar)") }));
     });
+    var comps = e.nfse_comp || {}, ultComp = Object.keys(comps).sort().pop();
+    if (ultComp) {
+      var c = comps[ultComp], cMes = ultComp.slice(5) + "/" + ultComp.slice(0, 4);
+      if (c.erro) fech.push(el("span", { classe: "mini msg-erro", texto: "NFS-e " + cMes + ": erro ao montar (" + c.erro + ")" }));
+      else {
+        fech.push(el("span", { classe: "mini" }, [el("strong", { texto: "NFS-e " + cMes + ": " }),
+          c.prestadas + " prestada" + (c.prestadas === 1 ? "" : "s") + " (R$ " + moeda(c.valor_prestadas) + ") · " +
+          c.tomadas + " tomada" + (c.tomadas === 1 ? "" : "s") + (c.canceladas ? " · " + c.canceladas + " cancelada(s)" : "") + " · pacote do Sittax pronto"]));
+        if (c.erro_captura) fech.push(el("span", { classe: "mini msg-erro", texto: "Atenção: " + c.erro_captura }));
+      }
+    }
     if (!fech.length) fech.push(el("span", { classe: "mini", texto: "—" }));
 
     return el("tr", null, [
@@ -805,7 +850,7 @@
         cod
       ]),
       el("td", { "data-rotulo": "Certificado" }, certTd),
-      el("td", { "data-rotulo": "Captura" }, [botao]),
+      el("td", { "data-rotulo": "Captura" }, [botao, selNfse]),
       el("td", { "data-rotulo": "Última captura" }, ultTd),
       el("td", { "data-rotulo": "Notas baixadas" }, notas),
       el("td", { "data-rotulo": "Fechamento do mês" }, fech)
@@ -821,6 +866,7 @@
     api("/api/robo/salvar", Object.assign({ cnpj: cnpj }, cfg)).then(function () {
       e.config = cfg;
       if ("ativo" in mudanca) toast((cfg.ativo ? "Captura ligada para " : "Captura desligada para ") + cfg.cliente + ".");
+      else if ("nfse_acesso" in mudanca) toast("NFS-e de " + cfg.cliente + ": " + (cfg.nfse_acesso === "certificado" ? "pelo certificado da empresa." : "pela procuração da Staff."));
       else toast("Código salvo.");
       renderRobo();
       var b = document.querySelector('.botao-captura[data-cnpj="' + cnpj + '"]');
@@ -844,6 +890,7 @@
   });
   $("robo-linhas").addEventListener("change", function (ev) {
     var t = ev.target;
+    if (t.getAttribute("data-robo") === "nfse_acesso") { salvarRobo(t.getAttribute("data-cnpj"), { nfse_acesso: t.value }, t); return; }
     if (t.getAttribute("data-robo") !== "codigo") return;
     salvarRobo(t.getAttribute("data-cnpj"), { codigo: t.value.replace(/\D/g, "") }, t);
   });

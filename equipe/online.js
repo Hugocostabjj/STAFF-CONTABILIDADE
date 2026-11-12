@@ -333,7 +333,7 @@
         var d = p.dados || {};
         if (p.tipo === "salvar" && porCnpj[d.cnpj]) {
           var e = porCnpj[d.cnpj];
-          e.config = Object.assign({}, e.config, { ativo: !!d.ativo, codigo: d.codigo || "", cliente: d.cliente || e.config.cliente });
+          e.config = Object.assign({}, e.config, { ativo: !!d.ativo, codigo: d.codigo || "", cliente: d.cliente || e.config.cliente, nfse_acesso: d.nfse_acesso || e.config.nfse_acesso });
           e.pendente = true;
         } else if (p.tipo === "ligar_todas") {
           obj.empresas.forEach(function (e) {
@@ -342,6 +342,7 @@
         } else if (p.tipo === "escritorio") obj.cnpj_escritorio = d.cnpj || "";
         else if (p.tipo === "agenda") obj.agenda = { ligada: !!d.ligar, proxima: "", pendente: true };
         else if (p.tipo === "rodar") obj.pedido_rodar = true;
+        else if (p.tipo === "competencia") obj.pedido_competencia = true;
       });
       // conexão do computador do escritório
       var avisos = [];
@@ -404,7 +405,8 @@
     "/api/robo/salvar": function (b) {
       var cnpj = digitos(b && b.cnpj);
       if (cnpj.length !== 14) return Promise.reject(new Error("CNPJ inválido"));
-      return pedir("salvar", { cnpj: cnpj, ativo: !!b.ativo, codigo: digitos(b.codigo).slice(0, 10), cliente: texto(b.cliente, 150) })
+      return pedir("salvar", { cnpj: cnpj, ativo: !!b.ativo, codigo: digitos(b.codigo).slice(0, 10), cliente: texto(b.cliente, 150),
+        nfse_acesso: b.nfse_acesso === "certificado" ? "certificado" : "procuracao" })
         .then(function () { return { ok: true }; });
     },
     "/api/robo/ligar-todas": function (b) {
@@ -421,6 +423,11 @@
     "/api/robo/agenda": function (b) {
       var ligar = !!(b && b.ligar);
       return pedir("agenda", { ligar: ligar }).then(function () { return { ok: true, agenda: { ligada: ligar, proxima: "", pendente: true } }; });
+    },
+    "/api/robo/competencia": function (b) {
+      var m = String((b && b.competencia) || "");
+      if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(m)) return Promise.reject(new Error("competência inválida"));
+      return pedir("competencia", { competencia: m }).then(function () { return { ok: true }; });
     },
     "/api/robo/rodar": function () {
       return pedir("rodar", {}).then(function () { return { ok: true }; });
