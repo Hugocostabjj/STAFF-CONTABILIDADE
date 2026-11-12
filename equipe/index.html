@@ -10,8 +10,8 @@
 <meta name="supabase-key" content="sb_publishable_sQOzzt2lNsfQQA7LEy87hA_OQkEqpOj">
 <meta name="color-scheme" content="light dark">
 <title>Área da equipe · Staff</title>
-<link rel="stylesheet" href="painel.css?v=2026-11-06">
-<link rel="stylesheet" href="online.css?v=2026-11-06">
+<link rel="stylesheet" href="painel.css?v=2026-11-12">
+<link rel="stylesheet" href="online.css?v=2026-11-12">
 <link rel="icon" href="../assets/img/favicon_staff-2-58x58.png">
 </head>
 <body class="sem-login">
@@ -100,7 +100,7 @@
 
 <nav class="abas" aria-label="Seções">
   <div class="abas-in" role="tablist">
-    <button type="button" role="tab" class="aba" id="tab-venc" aria-selected="true" aria-controls="aba-venc">Vencimentos</button>
+    <button type="button" role="tab" class="aba" id="tab-venc" aria-selected="true" aria-controls="aba-venc">Certificados</button>
     <button type="button" role="tab" class="aba" id="tab-robo" aria-selected="false" aria-controls="aba-robo" tabindex="-1">Robô de notas</button>
     <button type="button" role="tab" class="aba" id="tab-equipe" aria-selected="false" aria-controls="aba-equipe" tabindex="-1" hidden>Equipe</button>
   </div>
@@ -114,6 +114,8 @@
   <div class="barra-acoes-topo" hidden>
     <button type="button" class="btn btn-sec" id="btn-importar">Trazer certificados instalados no Windows</button>
   </div>
+
+  <div class="avisos-robo" id="avisos-venc"></div>
 
   <section class="cards" aria-label="Resumo">
     <button type="button" class="card card-vencido" data-filtro-sit="vencido" aria-pressed="false">
@@ -136,6 +138,10 @@
       <span class="card-num" id="n-ok">0</span>
       <span class="card-rot">Válidos</span>
     </button>
+    <button type="button" class="card card-naocad" data-filtro-sit="nao_cad" aria-pressed="false">
+      <span class="card-num" id="n-nao_cad">0</span>
+      <span class="card-rot">Sem certificado cadastrado</span>
+    </button>
   </section>
 
   <section class="painel-lista">
@@ -155,6 +161,7 @@
           <option value="ok">Válidos</option>
           <option value="sem_cert">Sem certificado (emitir)</option>
           <option value="nao_renova">Não vai renovar</option>
+          <option value="nao_cad">Sem certificado cadastrado</option>
         </select>
       </label>
       <label>
@@ -270,6 +277,39 @@
     <div class="vazio" id="robo-vazio" hidden><p>Nenhum certificado e-CNPJ encontrado neste Windows.</p></div>
   </section>
 
+  <section class="painel-lista relatorio" aria-labelledby="rel-tit">
+    <div class="rel-topo">
+      <div>
+        <h2 id="rel-tit">Relatório de notas do mês</h2>
+        <p class="mini">Quantidade de XML que já está na pasta de cada empresa, pelo mês de emissão. O mês só fica completo depois da captura do dia 1º seguinte.</p>
+      </div>
+      <div class="rel-acoes">
+        <label class="campo"><span>Mês</span><select id="rel-mes"></select></label>
+        <button type="button" class="btn btn-sec" id="rel-baixar">Baixar planilha</button>
+      </div>
+    </div>
+    <div class="tabela-wrap">
+      <table class="tabela tabela-rel" id="rel-tabela">
+        <thead>
+          <tr>
+            <th scope="col">Empresa</th>
+            <th scope="col" class="num">NF-e emitidas</th>
+            <th scope="col" class="num">NF-e recebidas</th>
+            <th scope="col" class="num">NFC-e</th>
+            <th scope="col" class="num">CT-e</th>
+            <th scope="col" class="num">NFS-e prestadas</th>
+            <th scope="col" class="num">NFS-e tomadas</th>
+            <th scope="col" class="num">Total</th>
+          </tr>
+        </thead>
+        <tbody id="rel-linhas"></tbody>
+        <tfoot id="rel-total"></tfoot>
+      </table>
+    </div>
+    <p class="mini" id="rel-vazio" hidden>Ainda não há notas capturadas.</p>
+    <p class="dica">NF-e emitidas só chegam quando o cliente coloca o CNPJ da Staff no autXML. NFC-e: a SEFAZ não entrega pelo robô; contam só as que estiverem na pasta <code>NFC-e</code> do mês (por exemplo, exportadas do sistema de vendas do cliente). Cada empresa também tem a planilha <code>relatorio-notas.csv</code> na pasta <code>FISCAL\XML</code> do Drive.</p>
+  </section>
+
   <details class="ciencia-info">
     <summary>O que acontece quando eu ligo a captura de uma empresa?</summary>
     <p><strong>NF-e de entrada:</strong> a SEFAZ entrega primeiro só o resumo. O robô registra a <strong>Ciência da Operação</strong> (evento 210210) em nome do cliente, que só diz que a empresa sabe da nota (não confirma nem recusa a compra), e em seguida pede a nota completa pela chave (se a SEFAZ ainda não liberou, tenta de novo nas próximas rodadas). A ciência só é aceita até 10 dias depois da emissão: notas mais antigas ficam só em resumo e aparecem em vermelho no "Fechamento do mês" e no relatório, com a chave, para pedir o XML ao fornecedor. Por decisão do escritório, a ciência vem junto com a captura: ligue só para clientes que autorizaram (de preferência no contrato).</p>
@@ -310,9 +350,9 @@
       </button>
     </div>
 
-    <fieldset class="caixa-pfx" hidden>
+    <fieldset class="caixa-pfx">
       <legend>Certificado A1 (arquivo .pfx ou .p12)</legend>
-      <p class="dica">Escolha o arquivo e digite a senha para preencher titular e validade automaticamente. <strong>A senha não é guardada</strong> e CPF fica mascarado. Para A3 (cartão ou token), preencha a data à mão.</p>
+      <p class="dica">Escolha o arquivo e digite a senha, como no cadastro da Domínio. Ao salvar, o certificado é <strong>instalado no computador do escritório</strong> (sem permitir copiar de volta) e fica guardado cifrado pelo Windows para o robô baixar as notas e a NFS-e. Titular, CNPJ e validade são preenchidos sozinhos. Para A3 (cartão ou token), não escolha arquivo: preencha a data à mão.</p>
       <div class="linha-pfx">
         <label class="campo">
           <span>Arquivo</span>
@@ -322,8 +362,9 @@
           <span>Senha do certificado</span>
           <input type="password" id="pfx-senha" autocomplete="off">
         </label>
-        <button type="button" class="btn btn-azul" id="pfx-ler">Ler dados</button>
+        <button type="button" class="btn btn-azul" id="pfx-ler" hidden>Ler dados</button>
       </div>
+      <label class="check-pfx" id="pfx-instalar-rot" hidden><input type="checkbox" id="pfx-instalar" checked> Instalar para o robô de notas (captura e NFS-e)</label>
       <p class="msg-pfx" id="pfx-msg" role="status"></p>
     </fieldset>
 
@@ -430,7 +471,7 @@
 </dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="online.js?v=2026-11-06"></script>
+<script src="online.js?v=2026-11-12"></script>
 <script src="painel.js?v=2026-11-12"></script>
 </body>
 </html>

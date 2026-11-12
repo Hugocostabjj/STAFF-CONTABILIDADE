@@ -278,6 +278,34 @@
     if (isNaN(d)) return "";
     return ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2) + " às " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
   }
+  // ---------- envio do .pfx + senha CIFRADO no navegador (só o computador do escritório abre)
+  function b64ParaBytes(b64) {
+    var bin = atob(b64), u = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    return u;
+  }
+  function bytesParaB64(buf) {
+    var u = new Uint8Array(buf), s = "";
+    for (var i = 0; i < u.length; i++) s += String.fromCharCode(u[i]);
+    return btoa(s);
+  }
+  function cifrarParaComputador(chavePub, obj) {
+    var conteudo = new TextEncoder().encode(JSON.stringify(obj));
+    var iv = crypto.getRandomValues(new Uint8Array(12));
+    return Promise.all([
+      crypto.subtle.importKey("spki", b64ParaBytes(chavePub), { name: "RSA-OAEP", hash: "SHA-256" }, false, ["encrypt"]),
+      crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt"])
+    ]).then(function (k) {
+      return Promise.all([
+        crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, k[1], conteudo),
+        crypto.subtle.exportKey("raw", k[1]).then(function (bruta) { return crypto.subtle.encrypt({ name: "RSA-OAEP" }, k[0], bruta); })
+      ]);
+    }).then(function (r) {
+      conteudo = null;
+      return { v: 1, iv: bytesParaB64(iv), c: bytesParaB64(r[0]), k: bytesParaB64(r[1]) };
+    });
+  }
+
   function soComputador() { return Promise.reject(new Error("isso só funciona no computador do escritório (onde ficam os certificados)")); }
   function pedir(tipo, dados) { return rest("POST", "robo_pedidos", { tipo: tipo, dados: dados || {} }, "return=minimal"); }
 
@@ -335,9 +363,10 @@
     "/api/dados": function () {
       return Promise.all([
         rest("GET", "certificados?excluido=eq.false&select=*&order=cliente"),
-        geral()
+        geral(),
+        rest("GET", "certificados_envio?select=rotulo,status,resposta,enviado_em,enviado_por&order=id.desc&limit=20").catch(function () { return []; })
       ]).then(function (r) {
-        return { certificados: (r[0] || []).map(paraPainel), clientes: r[1].dados.clientes || [], hoje: hoje() };
+        return { certificados: (r[0] || []).map(paraPainel), clientes: r[1].dados.clientes || [], hoje: hoje(), envios: r[2] || [] };
       });
     },
     "/api/salvar": function (b) {
@@ -353,6 +382,21 @@
         if (!l || !l.length) throw new Error("certificado não encontrado");
         return { ok: true };
       });
+    },
+    "/api/enviar-pfx": function (b) {
+      b = b || {};
+      var item = {};
+      ["id", "cliente", "codigo", "responsavel", "whatsapp", "email", "acompanhamento", "avisado_em", "obs"].forEach(function (k) {
+        if (b.item && b.item[k]) item[k] = texto(b.item[k], 400);
+      });
+      if (!b.arquivo || !b.senha) return Promise.reject(new Error("escolha o arquivo e digite a senha"));
+      if (!window.crypto || !crypto.subtle) return Promise.reject(new Error("este navegador não consegue cifrar o envio; use o Chrome ou o Edge atualizados"));
+      return geral().then(function (g) {
+        if (!g.dados.chave_envio) throw new Error("o computador do escritório ainda não preparou o envio seguro; tente de novo em 5 minutos");
+        return cifrarParaComputador(g.dados.chave_envio, { pfx: b.arquivo, senha: b.senha, item: item });
+      }).then(function (env) {
+        return rest("POST", "certificados_envio", { rotulo: texto(item.cliente || "certificado sem nome", 150), dados: env }, "return=minimal");
+      }).then(function () { return { ok: true, instalado: false }; });
     },
     "/api/ler-pfx": soComputador,
     "/api/importar-windows": soComputador,

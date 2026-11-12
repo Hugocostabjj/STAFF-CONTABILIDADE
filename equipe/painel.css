@@ -46,6 +46,8 @@
 }
 
 * { box-sizing: border-box; }
+.check-pfx { display: flex; align-items: center; gap: .55rem; min-height: 44px; margin-top: .5rem; font-weight: 600; cursor: pointer; }
+.check-pfx input { width: 20px; height: 20px; accent-color: var(--azul); }
 [hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
@@ -108,7 +110,7 @@ code { font-size: .9em; }
 
 /* conteúdo */
 .conteudo { max-width: 1200px; margin: 0 auto; padding: 1.25rem; }
-.cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: .9rem; margin-bottom: 1.25rem; }
+.cards { display: grid; grid-template-columns: repeat(6, 1fr); gap: .9rem; margin-bottom: 1.25rem; }
 .card {
   display: flex; flex-direction: column; align-items: flex-start; gap: .1rem; text-align: left;
   padding: 1rem 1.1rem; border-radius: var(--raio); border: 1px solid var(--linha);
@@ -126,6 +128,15 @@ code { font-size: .9em; }
 .card-semcert { --cor: var(--semcert); --cor-bg: var(--semcert-bg); }
 .selo.sem_cert { --cor: var(--semcert); --cor-bg: var(--semcert-bg); }
 .selo.sem_cert::before { border-radius: 2px; }
+.card-naocad { --cor: var(--neutro); --cor-bg: var(--neutro-bg); }
+.selo.nao_cad { --cor: var(--neutro); --cor-bg: var(--neutro-bg); }
+.selo.nao_cad::before { border-radius: 2px; background: transparent; border: 2px solid currentColor; }
+.relatorio { margin-top: 1.25rem; }
+.rel-topo { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: .8rem; margin-bottom: .6rem; }
+.rel-topo h2 { font-size: 1.15rem; }
+.rel-acoes { display: flex; flex-wrap: wrap; align-items: end; gap: .6rem; }
+.tabela-rel td.num, .tabela-rel th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.tabela-rel tfoot td { font-weight: 700; border-top: 2px solid var(--linha); }
 
 .painel-lista {
   background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--raio);

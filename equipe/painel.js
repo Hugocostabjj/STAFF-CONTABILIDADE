@@ -57,6 +57,7 @@
   }
 
   function situacao(c) {
+    if (c.nao_cad) return "nao_cad";
     if (c.acompanhamento === "nao_renova") return "nao_renova";
     if (c.acompanhamento === "sem_certificado") return "sem_cert";
     var d = diasAte(c.vence_em);
@@ -68,6 +69,7 @@
 
   function textoSituacao(c) {
     var d = diasAte(c.vence_em);
+    if (c.nao_cad) return "Não cadastrado";
     if (c.acompanhamento === "nao_renova") return "Não vai renovar";
     if (c.acompanhamento === "sem_certificado") return "Sem certificado · emitir";
     if (d < 0) return d === -1 ? "Venceu ontem" : "Venceu há " + (-d) + " dias";
@@ -116,11 +118,31 @@
   }
 
   // ------------------------------------------------------------ lista
+  // Empresas do escritório (lista do Drive 1CLIENTES) que ainda não têm certificado na lista
+  function naoCadastrados() {
+    var codigos = {}, nomes = {};
+    DADOS.certificados.forEach(function (c) {
+      if (c.codigo) codigos[c.codigo] = 1;
+      nomes[semAcento(c.cliente).trim()] = 1;
+      if (c.titular) nomes[semAcento(c.titular).trim()] = 1;
+    });
+    var vistos = {};
+    return (DADOS.clientes || []).filter(function (e) {
+      var n = semAcento(e.nome).trim();
+      if (!n || vistos[n] || (e.codigo && codigos[e.codigo]) || nomes[n]) return false;
+      vistos[n] = 1;
+      return true;
+    }).map(function (e) {
+      return { id: "", nao_cad: true, cliente: e.nome, codigo: e.codigo || "", tipo: "", vence_em: "", avisado_em: "", acompanhamento: "" };
+    });
+  }
+  function todas() { return DADOS.certificados.concat(naoCadastrados()); }
+
   function filtrados() {
     var busca = semAcento($("busca").value).trim();
     var buscaDig = busca.replace(/\D/g, "");
     var sit = $("f-sit").value, tipo = $("f-tipo").value, aviso = $("f-aviso").value;
-    return DADOS.certificados.filter(function (c) {
+    return todas().filter(function (c) {
       if (sit && situacao(c) !== sit) return false;
       if (tipo && c.tipo !== tipo) return false;
       if (aviso === "sim" && !c.avisado_em) return false;
@@ -133,16 +155,36 @@
       }
       return true;
     }).sort(function (a, b) {
-      var ordem = { vencido: 0, urgente: 1, sem_cert: 2, atencao: 3, ok: 4, nao_renova: 5 };
+      var ordem = { vencido: 0, urgente: 1, sem_cert: 2, atencao: 3, ok: 4, nao_renova: 5, nao_cad: 6 };
       var oa = ordem[situacao(a)], ob = ordem[situacao(b)];
       if (oa !== ob) return oa - ob;
+      if (oa === 6) return a.cliente.localeCompare(b.cliente, "pt-BR");
       return a.vence_em < b.vence_em ? -1 : a.vence_em > b.vence_em ? 1 : a.cliente.localeCompare(b.cliente, "pt-BR");
     });
   }
 
+  var enviosTimer = null;
+  function renderEnvios() {
+    var av = $("avisos-venc"), pendente = false;
+    av.textContent = "";
+    (DADOS.envios || []).forEach(function (e) {
+      var dias = (Date.now() - Date.parse(e.enviado_em)) / 86400000;
+      if (e.status === "pendente") {
+        pendente = true;
+        av.appendChild(el("p", { classe: "aviso-amarelo", texto: "Certificado de " + e.rotulo + " enviado: o computador do escritório instala em alguns minutos." }));
+      } else if (e.status === "erro" && dias < 7) {
+        av.appendChild(el("p", { classe: "aviso-erro", texto: "Não deu para instalar o certificado de " + e.rotulo + ": " + e.resposta + ". Confira o arquivo e a senha e envie de novo." }));
+      }
+    });
+    clearTimeout(enviosTimer);
+    if (pendente) enviosTimer = setTimeout(carregar, 60000);
+  }
+
   function render() {
-    var cont = { vencido: 0, urgente: 0, atencao: 0, ok: 0, sem_cert: 0 };
-    DADOS.certificados.forEach(function (c) { var s = situacao(c); if (s in cont) cont[s]++; });
+    renderEnvios();
+    var cont = { vencido: 0, urgente: 0, atencao: 0, ok: 0, sem_cert: 0, nao_cad: 0 };
+    var tudo = todas();
+    tudo.forEach(function (c) { var s = situacao(c); if (s in cont) cont[s]++; });
     Object.keys(cont).forEach(function (k) { $("n-" + k).textContent = cont[k]; });
 
     var sit = $("f-sit").value;
@@ -157,18 +199,33 @@
     tb.textContent = "";
     lista.forEach(function (c) { tb.appendChild(linha(c)); });
 
-    var total = DADOS.certificados.length;
+    var total = tudo.length;
     $("tabela").hidden = lista.length === 0;
     $("vazio").hidden = lista.length !== 0;
-    $("vazio-txt").textContent = total ? "Nenhum certificado com esses filtros." : "Nenhum certificado cadastrado ainda.";
+    $("vazio-txt").textContent = total ? "Nenhuma empresa com esses filtros." : "Nenhum certificado cadastrado ainda.";
     $("btn-novo-2").hidden = total > 0;
     $("contagem").textContent = total
-      ? (temFiltro ? "Mostrando " + lista.length + " de " + total + " certificados" : total + (total === 1 ? " certificado" : " certificados")) + " · ordenados pelo vencimento"
+      ? (temFiltro ? "Mostrando " + lista.length + " de " + total + " empresas" : total + " empresas · " + DADOS.certificados.length + " com certificado") + " · ordenadas pelo vencimento"
       : "";
   }
 
   function linha(c) {
     var s = situacao(c);
+    if (s === "nao_cad") {
+      var bCad = el("button", { type: "button", classe: "btn btn-acao principal", "data-acao": "cadastrar", "data-nome": c.cliente, "data-codigo": c.codigo, texto: "Cadastrar" });
+      bCad.setAttribute("aria-label", "Cadastrar o certificado de " + c.cliente);
+      return el("tr", null, [
+        el("td", { "data-rotulo": "Situação" }, [el("span", { classe: "selo nao_cad", texto: "Não cadastrado" })]),
+        el("td", { "data-rotulo": "Cliente" }, [
+          el("span", { classe: "cli-nome", texto: c.cliente }),
+          el("span", { classe: "mini", texto: c.codigo ? "Código " + c.codigo : "Sem código" })
+        ]),
+        el("td", { "data-rotulo": "Certificado" }, [el("span", { classe: "mini", texto: "—" })]),
+        el("td", { "data-rotulo": "Vence em", classe: "data", texto: "" }),
+        el("td", { "data-rotulo": "Aviso ao cliente" }, [el("span", { classe: "aviso-status mini", texto: "—" })]),
+        el("td", null, [el("div", { classe: "acoes" }, [bCad])])
+      ]);
+    }
     var precisaAviso = (s === "vencido" || s === "urgente" || s === "atencao" || s === "sem_cert") && !c.avisado_em;
 
     var avisoTxt;
@@ -221,8 +278,9 @@
   };
 
   function abrirCadastro(c) {
-    EDITANDO = c || null;
-    $("dlg-cert-tit").textContent = c ? "Editar certificado" : "Cadastrar certificado";
+    EDITANDO = c && c.id ? c : null;      // sem id = empresa da lista ainda sem certificado (só preenche)
+    $("dlg-cert-tit").textContent = EDITANDO ? "Editar certificado" : "Cadastrar certificado";
+    $("pfx-instalar").checked = true;
     Object.keys(CAMPOS).forEach(function (k) {
       var v = c ? (c[k] || "") : "";
       if (k === "tipo" && !v) v = "e-CNPJ A1";
@@ -234,7 +292,7 @@
     msgPfx("", "");
     erroForm("");
     $("dlg-cert").showModal();
-    $(c ? "c-cliente" : "pfx-arquivo").focus();
+    $(EDITANDO ? "c-cliente" : "pfx-arquivo").focus();
   }
 
   function formatarFone(d) {
@@ -263,19 +321,29 @@
     if (achou && achou.codigo && !$("c-codigo").value) $("c-codigo").value = achou.codigo;
   });
 
+  function lerArquivo(arq) {
+    return new Promise(function (ok, falha) {
+      if (arq.size > 100000) { falha(new Error("esse arquivo é grande demais para ser um certificado")); return; }
+      var leitor = new FileReader();
+      leitor.onload = function () {
+        var bytes = new Uint8Array(leitor.result), bin = "";
+        for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+        ok(btoa(bin));
+      };
+      leitor.onerror = function () { falha(new Error("não foi possível abrir o arquivo")); };
+      leitor.readAsArrayBuffer(arq);
+    });
+  }
+
   $("pfx-ler").addEventListener("click", function () {
     var arq = $("pfx-arquivo").files[0];
     var senha = $("pfx-senha").value;
     if (!arq) { msgPfx("Escolha o arquivo .pfx ou .p12.", "erro"); $("pfx-arquivo").focus(); return; }
-    if (arq.size > 100000) { msgPfx("Esse arquivo é grande demais para ser um certificado.", "erro"); return; }
     var botao = this;
     botao.setAttribute("aria-disabled", "true");
     msgPfx("Lendo o certificado…", "");
-    var leitor = new FileReader();
-    leitor.onload = function () {
-      var bytes = new Uint8Array(leitor.result), bin = "";
-      for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-      api("/api/ler-pfx", { arquivo: btoa(bin), senha: senha }).then(function (r) {
+    lerArquivo(arq).then(function (b64) {
+      return api("/api/ler-pfx", { arquivo: b64, senha: senha }).then(function (r) {
         $("c-titular").value = r.titular || "";
         $("c-documento").value = r.documento || "";
         $("c-ac").value = r.ac || "";
@@ -288,24 +356,39 @@
           $("c-cliente").value = achou ? achou.nome : r.titular;
           if (achou && achou.codigo) $("c-codigo").value = achou.codigo;
         }
-        msgPfx("Pronto: vence em " + dataBr(r.vence_em) + ". Confira os campos e clique em Salvar.", "ok");
-      }).catch(function (e) {
-        msgPfx(e.message.charAt(0).toUpperCase() + e.message.slice(1) + ".", "erro");
-      }).then(function () {
-        $("pfx-senha").value = "";       // a senha não fica nem na tela
-        $("pfx-arquivo").value = "";
-        bin = null;
-        botao.removeAttribute("aria-disabled");
+        msgPfx("Pronto: vence em " + dataBr(r.vence_em) + ". Confira os campos e clique em Salvar" +
+          ($("pfx-instalar").checked ? " (o certificado será instalado para o robô)." : "."), "ok");
       });
-    };
-    leitor.onerror = function () { msgPfx("Não foi possível abrir o arquivo.", "erro"); botao.removeAttribute("aria-disabled"); };
-    leitor.readAsArrayBuffer(arq);
+    }).catch(function (e) {
+      msgPfx(e.message.charAt(0).toUpperCase() + e.message.slice(1) + ".", "erro");
+    }).then(function () { botao.removeAttribute("aria-disabled"); });
   });
+
+  // Salvar com arquivo + senha: o certificado vai para o computador do escritório
+  // (instala no Windows e guarda cópia cifrada para o robô), como o cadastro da Domínio.
+  function enviarPfx(item) {
+    var arq = $("pfx-arquivo").files[0], senha = $("pfx-senha").value;
+    if (!senha) { erroForm("Digite a senha do certificado."); $("pfx-senha").focus(); return; }
+    $("btn-salvar").setAttribute("aria-disabled", "true");
+    lerArquivo(arq).then(function (b64) {
+      return api("/api/enviar-pfx", { arquivo: b64, senha: senha, item: item });
+    }).then(function (r) {
+      $("dlg-cert").close();
+      toast(r.instalado
+        ? "Certificado instalado para o robô" + (r.item && r.item.vence_em ? ": vence em " + dataBr(r.item.vence_em) : "") + "."
+        : "Certificado enviado com segurança. Em até 5 minutos o computador do escritório instala e ele aparece na lista com a validade.");
+      return carregar();
+    }).catch(function (e) {
+      erroForm(e.message.charAt(0).toUpperCase() + e.message.slice(1) + ".");
+    }).then(function () { $("btn-salvar").removeAttribute("aria-disabled"); });
+  }
 
   $("form-cert").addEventListener("submit", function (ev) {
     ev.preventDefault();
     var item = {};
     Object.keys(CAMPOS).forEach(function (k) { item[k] = $(CAMPOS[k]).value.trim(); });
+    if (EDITANDO) item.id = EDITANDO.id;
+    if ($("pfx-arquivo").files[0] && $("pfx-instalar").checked) { enviarPfx(item); return; }
     if (!item.cliente) { erroForm("Informe o cliente."); $("c-cliente").focus(); return; }
     if (!item.vence_em && item.acompanhamento !== "sem_certificado") { erroForm("Informe a data de vencimento (ou leia o arquivo .pfx)."); $("c-vence").focus(); return; }
     var zerou = false;
@@ -413,6 +496,10 @@
   $("linhas").addEventListener("click", function (ev) {
     var b = ev.target.closest("[data-acao]");
     if (!b) return;
+    if (b.getAttribute("data-acao") === "cadastrar") {
+      abrirCadastro({ cliente: b.getAttribute("data-nome"), codigo: b.getAttribute("data-codigo") || "", tipo: "e-CNPJ A1" });
+      return;
+    }
     var c = porId(b.getAttribute("data-id"));
     if (!c) return;
     var acao = b.getAttribute("data-acao");
@@ -559,7 +646,13 @@
     av.textContent = "";
     if (ROBO.empresas.length && !ROBO.drive_ok) av.appendChild(el("p", { classe: "aviso-amarelo" }, [el("strong", { texto: "Google Drive fechado: " }), "não encontrei " + ROBO.drive + ". Abra o Google Drive para computador. Enquanto isso, os XML ficam em " + ROBO.pasta_xml + " e vão para o Drive na próxima captura."]));
     (ROBO.avisos_online || []).forEach(function (t) { av.appendChild(el("p", { classe: "aviso-amarelo", texto: t })); });
-    if (ROBO.empresas.length && !ROBO.windows11) av.appendChild(el("p", { classe: "aviso-amarelo" }, [el("strong", { texto: "NFS-e (Portal Nacional): " }), "o Portal Nacional só aceita conexões TLS 1.3, que o Windows 10 deste computador não tem. NF-e e CT-e funcionam normalmente; a NFS-e passa a vir quando este computador estiver no Windows 11."]));
+    var semPfx = ROBO.empresas.filter(function (e) { return e.config && e.config.ativo && !e.pfx && "pfx" in e; });
+    if (semPfx.length) av.appendChild(el("p", { classe: "aviso-amarelo" }, [
+      el("strong", { texto: "NFS-e: " }),
+      "para buscar a NFS-e, cadastre o arquivo .pfx com a senha (aba Certificados > Editar ou Cadastrar) de " +
+      (semPfx.length === 1 ? "1 empresa" : semPfx.length + " empresas") + " com a captura ligada: " +
+      semPfx.map(function (e) { return e.config.cliente + (e.config.codigo ? " (" + e.config.codigo + ")" : ""); }).join(", ") + "."
+    ]));
 
     // certificado do escritório
     var sel = $("robo-escritorio"), atual = ROBO.cnpj_escritorio || "";
@@ -585,7 +678,73 @@
     $("robo-contagem").textContent = ROBO.empresas.length
       ? lista.length + " de " + ROBO.empresas.length + " empresas · " + ativas + " com a captura ligada"
       : "";
+    renderRelatorio();
   }
+
+  // ------------------------------------------------------------ relatório do mês
+  var REL_COLS = [["saida", "NF-e emitidas"], ["entrada", "NF-e recebidas"], ["nfce", "NFC-e"], ["cte", "CT-e"],
+    ["nfse_prestadas", "NFS-e prestadas"], ["nfse_tomadas", "NFS-e tomadas"]];
+  function mesBr(m) { return m.slice(5, 7) + "/" + m.slice(0, 4); }
+  function linhasRelatorio(mes) {
+    return ROBO.empresas.filter(function (e) {
+      var ms = (e.estado || {}).meses || {};
+      return ms[mes] || (e.config && e.config.ativo);
+    }).map(function (e) {
+      var q = (((e.estado || {}).meses || {})[mes]) || {};
+      var r = { nome: e.config.cliente || e.titular, codigo: e.config.codigo || "", so_resumo: q.so_resumo || 0, total: 0 };
+      REL_COLS.forEach(function (c) { r[c[0]] = q[c[0]] || 0; r.total += r[c[0]]; });
+      return r;
+    }).sort(function (a, b) { return a.nome.localeCompare(b.nome, "pt-BR"); });
+  }
+  function renderRelatorio() {
+    var meses = {};
+    ROBO.empresas.forEach(function (e) { Object.keys((e.estado || {}).meses || {}).forEach(function (m) { meses[m] = 1; }); });
+    var lista = Object.keys(meses).sort().reverse(), sel = $("rel-mes"), atual = sel.value;
+    if (!atual || lista.indexOf(atual) < 0) {
+      var d = DADOS.hoje ? new Date(Date.parse(DADOS.hoje + "T12:00:00Z")) : new Date(); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() - 1);
+      var anterior = d.toISOString().slice(0, 7);
+      atual = lista.indexOf(anterior) >= 0 ? anterior : (lista[0] || "");
+    }
+    sel.textContent = "";
+    lista.forEach(function (m) { var o = el("option", { value: m, texto: mesBr(m) }); if (m === atual) o.selected = true; sel.appendChild(o); });
+    var tb = $("rel-linhas"), tf = $("rel-total");
+    tb.textContent = ""; tf.textContent = "";
+    $("rel-vazio").hidden = !!lista.length;
+    $("rel-tabela").hidden = !lista.length;
+    $("rel-baixar").hidden = !lista.length;
+    if (!atual) return;
+    var soma = { total: 0 };
+    linhasRelatorio(atual).forEach(function (r) {
+      var tds = [el("td", { "data-rotulo": "Empresa" }, [el("span", { classe: "cli-nome", texto: r.nome }), el("span", { classe: "mini", texto: r.codigo ? "Código " + r.codigo : "Sem código" })])];
+      REL_COLS.forEach(function (c) {
+        soma[c[0]] = (soma[c[0]] || 0) + r[c[0]];
+        var filhos = [String(r[c[0]])];
+        if (c[0] === "entrada" && r.so_resumo) filhos.push(el("span", { classe: "mini", texto: "+" + r.so_resumo + " só resumo" }));
+        tds.push(el("td", { "data-rotulo": c[1], classe: "num" }, filhos));
+      });
+      soma.total += r.total;
+      tds.push(el("td", { "data-rotulo": "Total", classe: "num" }, [el("strong", { texto: String(r.total) })]));
+      tb.appendChild(el("tr", null, tds));
+    });
+    var tot = [el("td", { "data-rotulo": "Empresa", texto: "Total de " + mesBr(atual) })];
+    REL_COLS.forEach(function (c) { tot.push(el("td", { "data-rotulo": c[1], classe: "num", texto: String(soma[c[0]] || 0) })); });
+    tot.push(el("td", { "data-rotulo": "Total", classe: "num", texto: String(soma.total) }));
+    tf.appendChild(el("tr", null, tot));
+  }
+  $("rel-mes").addEventListener("change", renderRelatorio);
+  $("rel-baixar").addEventListener("click", function () {
+    var mes = $("rel-mes").value;
+    if (!mes) return;
+    var cel = function (v) { v = String(v); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    var linhas = [["Empresa", "Código"].concat(REL_COLS.map(function (c) { return c[1]; })).concat(["NF-e recebidas só resumo", "Total"]).join(";")];
+    linhasRelatorio(mes).forEach(function (r) {
+      linhas.push([cel(r.nome), r.codigo].concat(REL_COLS.map(function (c) { return r[c[0]]; })).concat([r.so_resumo, r.total]).join(";"));
+    });
+    var blob = new Blob(["﻿" + linhas.join("\r\n") + "\r\n"], { type: "text/csv;charset=utf-8" });
+    var a = el("a", { href: URL.createObjectURL(blob), download: "relatorio-notas-" + mes + ".csv" });
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+  });
 
   function linhaRobo(e) {
     var cfg = e.config || {}, est = e.estado || {};
