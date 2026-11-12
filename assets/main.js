@@ -1,4 +1,7 @@
 (function () {
+  "use strict";
+  // Não abrir dentro de outro site (proteção contra clickjacking).
+  if (window.top !== window.self) { document.documentElement.textContent = ""; return; }
   var cfg = window.STAFF_CONFIG || {};
   var reduzMovimento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -107,65 +110,5 @@
         aviso.hidden = false;
       }
     });
-  }
-
-  // Área da equipe
-  var painel = document.getElementById("painel");
-  var login = document.getElementById("login");
-  if (painel && login && window.StaffAuth) {
-    var lista = document.getElementById("lista-funcoes");
-    var quem = document.getElementById("quem");
-    var erro = document.getElementById("erro-login");
-    var faixaDemo = document.getElementById("faixa-demo");
-
-    (cfg.FUNCOES || []).forEach(function (f) {
-      var li = document.createElement("li");
-      var el = document.createElement(f.url ? "a" : "div");
-      el.className = "funcao" + (f.url ? "" : " funcao-off");
-      if (f.url) {
-        el.href = f.url;
-        el.target = "_blank";
-        el.rel = "noopener";
-      }
-      var nome = document.createElement("strong");
-      nome.textContent = f.nome;
-      var desc = document.createElement("span");
-      desc.textContent = f.descricao;
-      var estado = document.createElement("em");
-      estado.textContent = f.url ? "Abrir" : "Em breve";
-      el.appendChild(nome);
-      el.appendChild(desc);
-      el.appendChild(estado);
-      li.appendChild(el);
-      lista.appendChild(li);
-    });
-
-    var atualizar = function () {
-      var u = window.StaffAuth.usuario();
-      login.hidden = !!u;
-      painel.hidden = !u;
-      if (u) quem.textContent = u;
-      if (faixaDemo) faixaDemo.hidden = window.StaffAuth.modo() !== "demo";
-    };
-
-    document.getElementById("form-login").addEventListener("submit", function (ev) {
-      ev.preventDefault();
-      erro.hidden = true;
-      var f = ev.target;
-      window.StaffAuth.entrar(f.email.value.trim(), f.senha.value).then(function () {
-        f.reset();
-        atualizar();
-      }).catch(function (e) {
-        erro.textContent = e.message;
-        erro.hidden = false;
-      });
-    });
-
-    document.getElementById("btn-sair").addEventListener("click", function () {
-      window.StaffAuth.sair();
-      atualizar();
-    });
-
-    atualizar();
   }
 })();
