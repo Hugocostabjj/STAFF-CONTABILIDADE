@@ -34,14 +34,21 @@
   var hamb = document.getElementById("hamb");
   var menu = document.getElementById("menu");
   if (hamb && menu) {
-    hamb.addEventListener("click", function () {
-      var aberto = menu.classList.toggle("aberto");
+    var marcarMenu = function (aberto) {
+      menu.classList.toggle("aberto", aberto);
       hamb.setAttribute("aria-expanded", aberto ? "true" : "false");
+      hamb.setAttribute("aria-label", aberto ? "Fechar menu" : "Abrir menu");
+    };
+    hamb.addEventListener("click", function () {
+      marcarMenu(!menu.classList.contains("aberto"));
     });
     menu.addEventListener("click", function (ev) {
-      if (ev.target.tagName === "A") {
-        menu.classList.remove("aberto");
-        hamb.setAttribute("aria-expanded", "false");
+      if (ev.target.closest("a")) marcarMenu(false);
+    });
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape" && menu.classList.contains("aberto")) {
+        marcarMenu(false);
+        hamb.focus();
       }
     });
   }

@@ -21,6 +21,10 @@ img { max-width: 100%; display: block; }
 a { color: inherit; }
 :focus-visible { outline: 3px solid var(--laranja); outline-offset: 2px; }
 [hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.pular { position: absolute; left: 1rem; top: -100px; z-index: 100; background: var(--azul); color: #fff; font: 600 1rem var(--pop); padding: 0.75rem 1.2rem; border-radius: 0 0 8px 8px; text-decoration: none; }
+.pular:focus { top: 0; outline: 3px solid var(--amarelo); outline-offset: 0; }
+main:focus { outline: none; }
 
 .wrap { width: min(100% - 2rem, 1140px); margin-inline: auto; }
 
@@ -69,9 +73,14 @@ h1, h2, h3 { margin: 0; line-height: 1.2; }
 .hero { position: relative; height: 520px; overflow: hidden; background: #234; }
 .slide { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity 0.9s ease; display: flex; align-items: center; }
 .slide.ativo { opacity: 1; }
-.slide-1 { background-image: url("img/1.png"); }
-.slide-2 { background-image: url("img/2-1.png"); }
-.slide-3 { background-image: url("img/4.png"); }
+.slide-1 { background-image: url("img/hero-a.webp"); }
+.slide-2 { background-image: url("img/hero-b.webp"); }
+.slide-3 { background-image: url("img/hero-c.webp"); }
+@media (max-width: 760px) {
+  .slide-1 { background-image: url("img/hero-a-960.webp"); }
+  .slide-2 { background-image: url("img/hero-b-960.webp"); }
+  .slide-3 { background-image: url("img/hero-c-960.webp"); }
+}
 .slide::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10, 30, 60, 0.62), rgba(10, 30, 60, 0.1) 75%); }
 .slide .wrap { position: relative; color: #fff; }
 .slide h2 { font-family: var(--mont); font-weight: 700; font-size: clamp(1.7rem, 3vw, 2.3rem); margin-bottom: 1.2rem; }
@@ -118,7 +127,7 @@ h1, h2, h3 { margin: 0; line-height: 1.2; }
 /* Por que escolher */
 .porque {
   position: relative; padding: 4.5rem 0 5rem; color: #fff;
-  background: url("img/grupo-de-mergulhadores-de-pessoas-esta-trabalhando-no-escritorio-min-scaled.jpg") center / cover;
+  background: url("img/escritorio-faixa.webp") center / cover;
 }
 .porque::before { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(16, 114, 248, 0.55) 0 60%, rgba(255, 216, 0, 0.55) 60% 100%); }
 .porque .wrap { position: relative; }
@@ -290,3 +299,17 @@ a.funcao:hover { box-shadow: 0 0 18px rgba(243, 111, 33, 0.4); }
   html { scroll-behavior: auto; }
   .slide { transition: none; }
 }
+
+/* Áreas de toque com pelo menos 44 px (celular e mouse) — 13/11/2026 */
+.barra .redes a { display: grid; place-items: center; width: 44px; height: 42px; }
+.barra .redes { gap: 0; }
+.barra li > a { display: inline-flex; align-items: center; min-height: 44px; }
+.dados li > a { display: inline-flex; align-items: center; min-height: 44px; }
+.btn-claro { min-height: 44px; display: flex; align-items: center; }
+.bot-fab { min-height: 46px; }
+.menu a { display: inline-flex; align-items: center; min-height: 44px; }
+.menu button.botao-menu { min-height: 44px; }
+.hamb { min-width: 46px; min-height: 44px; }
+.seta { width: 44px; height: 44px; }
+.rodape .redes a { width: 44px; height: 44px; }
+.dados .mapa a { display: block; padding-block: 0.7rem; }
